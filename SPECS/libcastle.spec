@@ -4,7 +4,7 @@ Release:        %{buildrev}
 Summary:        C library for castle fs
 
 Group:          Filesystem
-License:        No
+License:        MIT
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
