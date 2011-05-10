@@ -1,0 +1,78 @@
+CASTLE_1 {
+  global:
+        /* Data path */
+        castle_connect;
+        castle_disconnect;
+        castle_free;
+        castle_request_do_blocking;
+        castle_request_do_blocking_multi;
+        castle_request_send;
+        castle_shared_buffer_create;
+        castle_shared_buffer_destroy;
+        castle_shared_buffer_allocate;
+        castle_shared_buffer_release;
+        castle_get;
+        castle_replace;
+        castle_remove;
+        castle_iter_start;
+        castle_iter_next;
+        castle_iter_finish;
+        castle_kvs_free;
+        castle_getslice;
+        castle_big_put;
+        castle_put_chunk;
+        castle_big_get;
+        castle_get_chunk;
+
+        castle_build_key;
+        castle_build_key_len;
+        castle_key_bytes_needed;
+        castle_malloc_key;
+
+        castle_print_key;
+        castle_print_request;
+        castle_print_response;
+
+        /* Control path */
+        castle_attach;
+        castle_attach_dev;
+        castle_claim;
+        castle_claim_dev;
+        castle_clone;
+        castle_collection_attach;
+        castle_collection_detach;
+        castle_collection_snapshot;
+        castle_environment_set;
+        castle_trace_setup;
+        castle_trace_start;
+        castle_trace_stop;
+        castle_trace_teardown;
+        castle_fault;
+        castle_slave_evacuate;
+        castle_slave_scan;
+        castle_thread_priority;
+        castle_create;
+        castle_detach;
+        castle_detach_dev;
+        castle_init;
+        castle_release;
+        castle_snapshot;
+        castle_snapshot_dev;
+        castle_destroy;
+
+        castle_device_to_devno;
+        castle_devno_to_device;
+
+        castle_max_buffer_size;
+
+        /* Shared buffer pool */
+        castle_shared_pool_create;
+        castle_shared_pool_destroy;
+        castle_shared_pool_lease;
+        castle_shared_pool_release;
+        
+        /* Collection utils */
+        castle_collection_find;
+        
+  local: *;
+};
