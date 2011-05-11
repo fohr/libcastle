@@ -17,7 +17,7 @@ install: $(SONAME)
 	install $(SONAME) $(LIB_DESTDIR)
 	ln -sf $(SONAME) $(LIB_DESTDIR)/libcastle.so 
 	if [ -z "$(DONT_RUN_LDCONFIG)" ]; then \
-	    ldconfig; \
+	    /sbin/ldconfig; \
 	fi
 
 	mkdir -p $(INC_DESTDIR)
