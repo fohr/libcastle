@@ -58,7 +58,8 @@ CASTLE_1 {
         castle_release;
         castle_snapshot;
         castle_snapshot_dev;
-        castle_destroy;
+        castle_destroy_vertree;
+	castle_delete_version;
 
         castle_device_to_devno;
         castle_devno_to_device;

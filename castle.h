@@ -44,6 +44,7 @@ typedef castle_interface_token_t castle_token;
 typedef collection_id_t castle_collection;
 typedef slave_uuid_t castle_slave_uuid;
 typedef version_t castle_version;
+typedef da_id_t castle_da;
 typedef c_env_var_t castle_env_var_id;
 
 typedef void (*castle_callback)   (castle_connection *connection,
@@ -280,6 +281,7 @@ int castle_get_chunk       (castle_connection *conn,
 #define C_TYPE_env_var castle_env_var_id
 #define C_TYPE_int int
 #define C_TYPE_int32 int32_t
+#define C_TYPE_da_id_t castle_da
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
   int castle_##_id (castle_connection *conn);
@@ -344,10 +346,10 @@ int castle_get_chunk       (castle_connection *conn,
         clone,                                                                                    \
         CASTLE_CTRL_CLONE,                                                                        \
         version, version, version, clone)                                                         \
-  CASTLE_IOCTL_2IN_0OUT(                                                                          \
-        destroy,                                                                                  \
-        CASTLE_CTRL_DESTROY,                                                                      \
-        version, version, int32, flag)                                                            \
+  CASTLE_IOCTL_1IN_0OUT(                                                                          \
+        delete_version,                                                                           \
+        CASTLE_CTRL_DELETE_VERSION,                                                               \
+        version, version)                                                                         \
   CASTLE_IOCTL_0IN_0OUT(                                                                          \
         init,                                                                                     \
         CASTLE_CTRL_INIT)                                                                         \
@@ -366,7 +368,11 @@ int castle_get_chunk       (castle_connection *conn,
   CASTLE_IOCTL_1IN_0OUT(                                                                          \
         thread_priority,                                                                          \
         CASTLE_CTRL_THREAD_PRIORITY,                                                              \
-        uint32, nice_value)
+        uint32, nice_value)                                                                       \
+  CASTLE_IOCTL_1IN_0OUT(                                                                          \
+        destroy_vertree,                                                                          \
+        CASTLE_CTRL_DESTROY_VERTREE,                                                              \
+        da_id_t, vertree_id)
 
 #define PRIVATE_CASTLE_IOCTLS                                                                     \
   CASTLE_IOCTL_3IN_1OUT(                                                                          \

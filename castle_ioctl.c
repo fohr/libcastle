@@ -43,6 +43,7 @@ int castle_protocol_version(struct castle_front_connection *conn) {
 #define C_PRINTF_env_var "%u"
 #define C_PRINTF_int "%d"
 #define C_PRINTF_int32 "%d"
+#define C_PRINTF_da_id_t "%d"
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
 int castle_##_id (struct castle_front_connection *conn)                                           \
