@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -39,6 +40,15 @@ static void *castle_response_thread(void *data)
     fd_set readfds;
     int ret, more_to_do;
     int max_fd = conn->select_pipe[0] > conn->fd ? conn->select_pipe[0] : conn->fd;
+    struct timeval last;
+    struct timeval *select_timeout = NULL, select_tv;
+    
+    if (want_debug(conn, DEBUG_STATS)) {
+      gettimeofday(&last, NULL);
+      select_tv.tv_sec = 1;
+      select_tv.tv_usec = 0;
+      select_timeout = &select_tv;
+    }
 
     while (!conn->response_thread_exit)
     {
@@ -49,7 +59,7 @@ static void *castle_response_thread(void *data)
         FD_SET(conn->fd, &readfds);
         FD_SET(conn->select_pipe[0], &readfds);
 
-        ret = select(max_fd + 1, &readfds, (fd_set *)NULL, (fd_set *)NULL, NULL);
+        ret = select(max_fd + 1, &readfds, (fd_set *)NULL, (fd_set *)NULL, select_timeout);
         if (ret <= 0)
         {
             debug("select returned %d\n", ret);
@@ -84,9 +94,9 @@ static void *castle_response_thread(void *data)
           for (i = conn->front_ring.rsp_cons; i != rp; i++) {
             resp = RING_GET_RESPONSE(&conn->front_ring, i);
 
-            if (__builtin_expect(conn->debug_log != NULL, 0)) {
+            if (want_debug(conn, DEBUG_RESPS)) {
               flockfile(conn->debug_log);
-              castle_print_response(conn->debug_log, resp, conn->debug_values);
+              castle_print_response(conn->debug_log, resp, conn->debug_flags & DEBUG_VALUES);
               fprintf(conn->debug_log, "\n");
               fflush(conn->debug_log);
               funlockfile(conn->debug_log);
@@ -120,10 +130,20 @@ static void *castle_response_thread(void *data)
 
           RING_FINAL_CHECK_FOR_RESPONSES(&conn->front_ring, more_to_do);
 
+          if (want_debug(conn, DEBUG_STATS)) {
+            struct timeval end;
+            gettimeofday(&end, NULL);
+            uint64_t delay_usec = (end.tv_sec - last.tv_sec) * 1000000 + (end.tv_usec - last.tv_usec);
+            if (delay_usec > 1000000) {
+              memcpy(&last, &end, sizeof(last));
+              fprintf(conn->debug_log, "ring free requests %d, reserved %d\n", RING_FREE_REQUESTS(&conn->front_ring), conn->front_ring.reserved);
+              fflush(conn->debug_log);
+            }
+          }
+
           pthread_mutex_lock(&conn->ring_mutex);
           pthread_cond_broadcast(&conn->ring_cond);
           pthread_mutex_unlock(&conn->ring_mutex);
-
         } while (more_to_do);
     }
 
@@ -325,10 +345,23 @@ int castle_connect(castle_connection **conn_out)
           if (-1 != err_fd)
             conn->debug_log = fdopen(err_fd, "a");
         }
-        if (getenv("CASTLE_DEBUG_VALUES"))
-          conn->debug_values = 1;
-        else
-          conn->debug_values = 0;
+        char *buf = strdup(debug_env);
+        char *buf_ptr = buf;
+        char *tok_ptr;
+        const char *token;
+        while ((token = strtok_r(buf_ptr, ",", &tok_ptr))) {
+          buf_ptr = NULL;
+
+          if (0 == strcmp(token, "reqs"))
+            conn->debug_flags |= DEBUG_REQS;
+          else if (0 == strcmp(token, "values"))
+            conn->debug_flags |= DEBUG_VALUES;
+          else if (0 == strcmp(token, "stats"))
+            conn->debug_flags |= DEBUG_STATS;
+          else if (0 == strcmp(token, "resps"))
+            conn->debug_flags |= DEBUG_RESPS;
+        }
+        free(buf);
       }
       else
         conn->debug_log = NULL;
@@ -399,6 +432,9 @@ void castle_disconnect(castle_connection *conn)
     pthread_mutex_unlock(&blocking_call_mutex);
 
     close(conn->select_pipe[0]); close(conn->select_pipe[1]);
+    
+    if (conn->debug_log)
+      fclose(conn->debug_log);
 }
 
 void castle_free(castle_connection *conn)
@@ -502,9 +538,9 @@ void castle_request_send(castle_connection *conn,
             callback->data = datas ? datas[i] : NULL;
             callback->token = get_request_token(&req[i]);
 
-            if (__builtin_expect(conn->debug_log != NULL, 0)) {
+            if (want_debug(conn, DEBUG_REQS)) {
               flockfile(conn->debug_log);
-              castle_print_request(conn->debug_log, &req[i], conn->debug_values);
+              castle_print_request(conn->debug_log, &req[i], conn->debug_flags & DEBUG_VALUES);
               fprintf(conn->debug_log, "\n");
               fflush(conn->debug_log);
               funlockfile(conn->debug_log);

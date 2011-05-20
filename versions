@@ -29,9 +29,11 @@ CASTLE_1 {
         castle_key_bytes_needed;
         castle_malloc_key;
 
+        /* Debugging use only
         castle_print_key;
         castle_print_request;
         castle_print_response;
+        */
 
         /* Control path */
         castle_attach;

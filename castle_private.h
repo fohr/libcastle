@@ -45,8 +45,15 @@ struct castle_front_connection
     /* pipe fds to wake up select in the response thread */
     int                 select_pipe[2];
 
+    int debug_flags;
     FILE *              debug_log;
-    int                 debug_values;
 } PACKED;
+
+#define DEBUG_REQS 1
+#define DEBUG_VALUES 2
+#define DEBUG_STATS 4
+#define DEBUG_RESPS 8
+
+#define want_debug(conn, flag) (__builtin_expect(conn->debug_flags & flag, 0))
 
 #endif /* __CASTLE_PRIVATE_H__ */
