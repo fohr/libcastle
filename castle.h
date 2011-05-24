@@ -372,6 +372,10 @@ int castle_get_chunk       (castle_connection *conn,
   CASTLE_IOCTL_1IN_0OUT(                                                                          \
         destroy_vertree,                                                                          \
         CASTLE_CTRL_DESTROY_VERTREE,                                                              \
+        da_id_t, vertree_id)                                                                      \
+  CASTLE_IOCTL_1IN_0OUT(                                                                          \
+        vertree_compact,                                                                          \
+        CASTLE_CTRL_VERTREE_COMPACT,                                                              \
         da_id_t, vertree_id)
 
 #define PRIVATE_CASTLE_IOCTLS                                                                     \
