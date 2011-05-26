@@ -191,7 +191,7 @@ static uint32_t get_key_len(c_vl_okey_t *key)
 }
 
 int castle_get(castle_connection *conn,
-               collection_id_t collection,
+               c_collection_id_t collection,
                castle_key *key,
                char **value_out, uint32_t *value_len_out)
 {
@@ -279,7 +279,7 @@ err0: return err;
 }
 
 int castle_replace(castle_connection *conn,
-                   collection_id_t collection,
+                   c_collection_id_t collection,
                    castle_key *key,
                    char *val, uint32_t val_len)
 {
@@ -305,7 +305,7 @@ err0: return err;
 }
 
 int castle_remove(castle_connection *conn,
-                  collection_id_t collection,
+                  c_collection_id_t collection,
                   castle_key *key)
 {
     struct castle_blocking_call call;
@@ -328,7 +328,7 @@ err0: return err;
 }
 
 int castle_iter_start(castle_connection *conn,
-                      collection_id_t collection,
+                      c_collection_id_t collection,
                       castle_key *start_key,
                       castle_key *end_key,
                       castle_interface_token_t *token_out)
@@ -493,7 +493,7 @@ int castle_iter_finish(castle_connection *conn,
 
 // 'limit' means the maximum number of values to retrieve. 0 means unlimited.
 int castle_getslice(castle_connection *conn,
-                    collection_id_t collection,
+                    c_collection_id_t collection,
                     castle_key *start_key,
                     castle_key *end_key,
                     struct castle_key_value_list **kvs_out,
@@ -552,7 +552,7 @@ err0:
 }
 
 int castle_big_put         (castle_connection *conn,
-                            collection_id_t collection,
+                            c_collection_id_t collection,
                             castle_key *key,
                             uint64_t val_length,
                             castle_interface_token_t *token_out)
@@ -604,7 +604,7 @@ int castle_put_chunk       (castle_connection *conn,
 }
 
 int castle_big_get         (castle_connection *conn,
-                            collection_id_t collection,
+                            c_collection_id_t collection,
                             castle_key *key,
                             castle_interface_token_t *token_out, uint64_t *value_len_out)
 {

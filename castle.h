@@ -41,10 +41,10 @@ typedef c_vl_key_t castle_key_part;
 typedef castle_request_t castle_request;
 typedef castle_response_t castle_response;
 typedef castle_interface_token_t castle_token;
-typedef collection_id_t castle_collection;
-typedef slave_uuid_t castle_slave_uuid;
-typedef version_t castle_version;
-typedef da_id_t castle_da;
+typedef c_collection_id_t castle_collection;
+typedef c_slave_uuid_t castle_slave_uuid;
+typedef c_ver_t castle_version;
+typedef c_da_t castle_da;
 typedef c_env_var_t castle_env_var_id;
 
 typedef void (*castle_callback)   (castle_connection *connection,
