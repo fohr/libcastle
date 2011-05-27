@@ -310,10 +310,6 @@ int castle_get_chunk       (castle_connection *conn,
         claim,                                                                                    \
         CASTLE_CTRL_CLAIM,                                                                        \
         uint32, dev, slave_uuid, id)                                                              \
-  CASTLE_IOCTL_1IN_0OUT(                                                                          \
-        release,                                                                                  \
-        CASTLE_CTRL_RELEASE,                                                                      \
-        slave_uuid, id)                                                                           \
   CASTLE_IOCTL_1IN_1OUT(                                                                          \
         attach,                                                                                   \
         CASTLE_CTRL_ATTACH,                                                                       \
