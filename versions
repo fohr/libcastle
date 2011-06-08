@@ -3,6 +3,7 @@ CASTLE_1 {
         /* Data path */
         castle_connect;
         castle_disconnect;
+        castle_fd;
         castle_free;
         castle_request_do_blocking;
         castle_request_do_blocking_multi;

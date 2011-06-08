@@ -224,6 +224,10 @@ static int set_non_blocking(int fd)
     return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
+int castle_fd(castle_connection *conn) {
+  return conn->fd;
+}
+
 int castle_connect(castle_connection **conn_out)
 {
     int err;

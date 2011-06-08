@@ -70,6 +70,7 @@ int castle_shared_buffer_release  (castle_connection *conn, castle_buffer* buffe
 int castle_connect                (castle_connection **conn) __attribute__((warn_unused_result));
 void castle_disconnect            (castle_connection *conn);
 void castle_free                  (castle_connection *conn);
+int castle_fd                     (castle_connection *conn);
 void castle_request_send          (castle_connection *conn,
                                    castle_request *req,
                                    castle_callback *callbacks,
