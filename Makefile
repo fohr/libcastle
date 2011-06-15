@@ -1,4 +1,4 @@
-CFLAGS=-fPIC -DPIC -std=gnu99 -ggdb -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wall -Wextra -Wshadow -Werror -O2
+CFLAGS=-fPIC -DPIC -std=gnu99 -ggdb -Wmissing-prototypes -Wmissing-declarations -Wstrict-prototypes -Wall -Wextra -Wshadow -Werror -O2 -D_FORTIFY_SOURCE=2
 LIB_DESTDIR=$(DESTDIR)/usr/lib64
 INC_DESTDIR=$(DESTDIR)/usr/include/castle
 
