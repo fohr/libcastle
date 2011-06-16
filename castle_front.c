@@ -105,6 +105,10 @@ static void *castle_response_thread(void *data)
             if(conn->callbacks[resp->call_id].callback)
                 conn->callbacks[resp->call_id].callback(conn, resp, conn->callbacks[resp->call_id].data);
 
+            pthread_mutex_lock(&conn->free_mutex);
+            list_add(&conn->callbacks[resp->call_id].list, &conn->free_callbacks);
+            pthread_mutex_unlock(&conn->free_mutex);
+
             if (conn->callbacks[resp->call_id].token) {
               unsigned int x = conn->callbacks[resp->call_id].token % CASTLE_STATEFUL_OPS;
               assert(x < CASTLE_STATEFUL_OPS);
@@ -113,10 +117,6 @@ static void *castle_response_thread(void *data)
               if (new == 0)
                 atomic_inc(&conn->front_ring.reserved);
             }
-
-            pthread_mutex_lock(&conn->free_mutex);
-            list_add(&conn->callbacks[resp->call_id].list, &conn->free_callbacks);
-            pthread_mutex_unlock(&conn->free_mutex);
 
             debug("Got response %d\n", resp->call_id);
 
