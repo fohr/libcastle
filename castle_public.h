@@ -19,9 +19,6 @@ enum {
     CVT_TYPE_INLINE          = 0x10,
     CVT_TYPE_ONDISK          = 0x20,
     CVT_TYPE_INVALID         = 0x00,
-    CVT_TYPE_COUNTER_SET     = 0x80,
-    CVT_TYPE_COUNTER_ADD     = 0x100,
-
 };
 #endif
 
@@ -99,6 +96,10 @@ typedef enum {
     TRACE_CACHE_T0_MEDIUM_OBJECTS_IOS_ID, /**< IOs to T0 medium objects                           */
     TRACE_CACHE_LARGE_OBJECT_IOS_ID,      /**< IOs to large objects                               */
     TRACE_CACHE_BLOOM_FILTER_IOS_ID,      /**< IOs to bloom filters                               */
+    TRACE_CACHE_BLOCK_GET_HITS_ID,        /**< Block hits within the cache                        */
+    TRACE_CACHE_BLOCK_GET_MISSES_ID,      /**< Block misses within the cache                      */
+    TRACE_CACHE_BLOCK_GET_HITS_PCT_ID,    /**< % of block hits within the cache                   */
+    TRACE_CACHE_BLOCK_GET_MISSES_PCT_ID,  /**< % of block misses within the cache                 */
 } c_trc_cache_var_t;
 
 /**
@@ -457,6 +458,15 @@ typedef struct castle_request_replace {
     uint32_t              value_len;
 } castle_request_replace_t;
 
+typedef struct castle_request_counter_replace {
+    c_collection_id_t     collection_id;
+    c_vl_okey_t          *key_ptr;
+    uint8_t               add; /* 0: SET op, 1: ADD op */
+    uint32_t              key_len;
+    void                 *value_ptr;
+    uint32_t              value_len;
+} castle_request_counter_replace_t;
+
 typedef struct castle_request_remove {
     c_collection_id_t     collection_id;
     c_vl_okey_t          *key_ptr;
@@ -470,6 +480,14 @@ typedef struct castle_request_get {
     void                *value_ptr; /* where to put the result */
     uint32_t             value_len;
 } castle_request_get_t;
+
+typedef struct castle_request_counter_get {
+    c_collection_id_t    collection_id;
+    c_vl_okey_t         *key_ptr;
+    uint32_t             key_len;
+    void                *value_ptr; /* where to put the result */
+    uint32_t             value_len;
+} castle_request_counter_get_t;
 
 typedef struct castle_request_iter_start {
     c_collection_id_t    collection_id;
@@ -525,6 +543,9 @@ typedef struct castle_request {
         castle_request_replace_t     replace;
         castle_request_remove_t      remove;
         castle_request_get_t         get;
+
+        castle_request_counter_replace_t    counter_replace;
+        castle_request_counter_get_t        counter_get;
 
         castle_request_big_get_t     big_get;
         castle_request_get_chunk_t   get_chunk;
