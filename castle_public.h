@@ -18,7 +18,10 @@
 enum {
     CVT_TYPE_INLINE          = 0x10,
     CVT_TYPE_ONDISK          = 0x20,
-    CVT_TYPE_INVALID         = 0x30,
+    CVT_TYPE_INVALID         = 0x30, //@TODO it's a different val in fs.hg/castle.h... fix it!
+    CVT_TYPE_COUNTER_SET     = 0x80,
+    CVT_TYPE_COUNTER_ADD     = 0x100,
+
 };
 #endif
 
@@ -430,6 +433,8 @@ typedef struct castle_var_length_object_key {
 #define CASTLE_RING_ITER_FINISH 9
 #define CASTLE_RING_ITER_SKIP 10
 #define CASTLE_RING_REMOVE 11
+#define CASTLE_RING_COUNTER_SET_REPLACE 12
+#define CASTLE_RING_COUNTER_ADD_REPLACE 13
 
 typedef uint32_t castle_interface_token_t;
 
