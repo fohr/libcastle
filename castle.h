@@ -36,8 +36,7 @@ struct s_castle_buffer
 /* Type names are all over the place - create a consistent set of typedefs for the public API */
 typedef struct castle_front_connection castle_connection;
 typedef struct s_castle_buffer castle_buffer;
-typedef c_vl_okey_t castle_key;
-typedef c_vl_key_t castle_key_part;
+typedef c_vl_bkey_t castle_key;
 typedef castle_request_t castle_request;
 typedef castle_response_t castle_response;
 typedef castle_interface_token_t castle_token;
@@ -216,31 +215,31 @@ ONLY_INLINE void castle_get_chunk_prepare(castle_request *req, castle_token toke
  *
  * When invoked with key_lens == NULL, uses strlen() to compute the lengths
  */
-uint32_t castle_build_key(castle_key *key, size_t buf_len, int dims, const int *key_lens, const uint8_t * const*keys);
+uint32_t castle_build_key(castle_key *key, size_t buf_len, int dims, const int *key_lens, const uint8_t * const*keys, const uint8_t *key_flags);
 /* Variation on the theme, always returns the number of bytes needed. Success is when that value is <= buf_len. Mostly just here because java-castle wants it */
-uint32_t castle_build_key_len(castle_key *key, size_t buf_len, int dims, const int *key_lens, const uint8_t * const*keys);
+uint32_t castle_build_key_len(castle_key *key, size_t buf_len, int dims, const int *key_lens, const uint8_t * const*keys, const uint8_t *key_flags);
 /* Returns the number of bytes needed for a key with these parameters */
-uint32_t castle_key_bytes_needed(int dims, const int *key_lens, const uint8_t * const*keys) __attribute__((pure));
+uint32_t castle_key_bytes_needed(int dims, const int *key_lens, const uint8_t * const*keys, const uint8_t *key_flags) __attribute__((pure));
 
 /* Convenience functions - some of these incur copies */
 
+#if 0
 /* Call as castle_alloca_key("foo") or castle_alloca_key("foo", "bar"). Likely to compile down to nothing. Only really useful when calling the convenience functions */
-#define castle_alloca_key(...) ({                                       \
-      const char *ks[] = { __VA_ARGS__ };                               \
-      uint32_t nr_dims = sizeof(ks) / sizeof(const char *);             \
-      castle_key *okey = alloca(sizeof(*okey) + sizeof(okey->dims[0]) * nr_dims); \
-      int i;                                                            \
-      okey->nr_dims = nr_dims;                                          \
-      for (i = 0; i < nr_dims; i++) {                                   \
-        size_t len = strlen(ks[i]);                                     \
-        castle_key_part *key = alloca(sizeof(*key) + len);              \
-        memcpy(key->key, ks[i], len);                                   \
-        key->length = len;                                              \
-        okey->dims[i] = key;                                            \
-      }                                                                 \
-      okey; })
+#define castle_alloca_key(...) ({                                                   \
+      const char *ks[] = { __VA_ARGS__ };                                           \
+      uint32_t nr_dims = sizeof(ks) / sizeof(const char *);                         \
+      castle_key *bkey;                                                             \
+                                                                                    \
+      key_len = castle_key_bytes_needed(nr_dims, NULL, (uint8_t **)ks, NULL);       \
+      bkey = alloca(key_len);                                                       \
+                                                                                    \
+      assert(castle_build_key(bkey, key_len, nr_dims, NULL, (uint8_t **)ks, NULL) != 0); \
+      bkey; })
+#endif
 
-castle_key *castle_malloc_key(int dims, const int *key_lens, const uint8_t * const*keys) __attribute__((malloc));
+castle_key *castle_malloc_key(int dims, const int *key_lens, const uint8_t * const*keys, const uint8_t *key_flags) __attribute__((malloc));
+
+#define castle_key_length(_key)         ( !(_key) ? 0 : ( (_key)->length + 4 ) )
 
 extern uint32_t castle_key_dims(const castle_key *key) __attribute__((always_inline));
 ONLY_INLINE uint32_t castle_key_dims(const castle_key *key) {
@@ -249,13 +248,20 @@ ONLY_INLINE uint32_t castle_key_dims(const castle_key *key) {
 
 extern uint32_t castle_key_elem_len(const castle_key *key, int elem) __attribute__((always_inline));
 ONLY_INLINE uint32_t castle_key_elem_len(const castle_key *key, int elem) {
-  return key->dims[elem]->length;
+  return castle_object_btree_key_dim_length(key, (uint32_t)elem);
 }
 
 extern const uint8_t *castle_key_elem_data(const castle_key *key, int elem) __attribute__((always_inline));
 ONLY_INLINE const uint8_t *castle_key_elem_data(const castle_key *key, int elem) {
-  return key->dims[elem]->key;
+  return (uint8_t *)castle_object_btree_key_dim_get(key, (uint32_t)elem);
 }
+
+extern uint8_t castle_key_elem_flags(const castle_key *key, int elem) __attribute__((always_inline));
+ONLY_INLINE uint8_t castle_key_elem_flags(const castle_key *key, int elem) {
+  return castle_object_btree_key_dim_flags_get(key, (uint32_t)elem);
+}
+
+int castle_key_copy        (castle_key *key, void *buf, uint32_t key_len);
 
 int castle_get             (castle_connection *conn,
                             castle_collection collection,

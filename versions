@@ -29,6 +29,7 @@ CASTLE_1 {
         castle_build_key_len;
         castle_key_bytes_needed;
         castle_malloc_key;
+        castle_key_copy;
 
         /* Debugging use only
         castle_print_key;

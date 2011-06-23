@@ -11,60 +11,81 @@
 
 #include "castle.h"
 
+#define castle_key_header_size(_nr_dims) castle_object_btree_key_header_size(_nr_dims)
+
 uint32_t
-castle_build_key_len(castle_key *key, size_t buf_len, int dims, const int *key_lens, const uint8_t * const*keys) {
-  int *lens = (int *)key_lens;
+castle_build_key_len(castle_key             *key,
+                     size_t                  buf_len,
+                     int                     dims,
+                     const int              *key_lens,
+                     const uint8_t * const  *keys,
+                     const uint8_t          *key_flags)
+{
+    int *lens = (int *)key_lens;
 
-  if (!key_lens && dims) {
-    if (!keys)
-      abort();
-    lens = alloca(dims * sizeof(lens[0]));
+    if (!key_lens && dims)
+    {
+        if (!keys)
+            abort();
+
+        lens = alloca(dims * sizeof(lens[0]));
+        for (int i = 0; i < dims; i++)
+            lens[i] = strlen((const char *)keys[i]);
+    }
+
+    /* Workout the header size (including the dim_head array). */
+    uint32_t needed = castle_key_header_size(dims);
     for (int i = 0; i < dims; i++)
-      lens[i] = strlen((const char *)keys);
-  }
+        needed += lens[i];
 
-  uint32_t needed = sizeof(castle_key) + sizeof(key->dims[0]) * dims + sizeof(*key->dims[0]) * dims;
-  for (int i = 0; i < dims; i++)
-    needed += lens[i];
+    if (!key || buf_len == 0 || !keys || buf_len < needed)
+        return needed;
 
-  if (!key || buf_len == 0 || !keys || buf_len < needed)
+    uint32_t payload_offset = castle_key_header_size(dims);
+    key->length = needed - 4; /* Length doesn't include length field. */
+    key->nr_dims = dims;
+    *((uint64_t *)key->_unused) = 0;
+
+    /* Go through all okey dimensions and write them in. */
+    for(int i=0; i<dims; i++)
+    {
+        if (key_flags)
+            key->dim_head[i] = KEY_DIMENSION_HEADER(payload_offset, key_flags[i]);
+        else
+            key->dim_head[i] = KEY_DIMENSION_HEADER(payload_offset, 0);
+        memcpy((char *)key + payload_offset, keys[i], lens[i]);
+        payload_offset += lens[i];
+    }
+
+    assert(payload_offset == needed);
+
     return needed;
-
-  key->nr_dims = dims;
-  char *ptr = (char *)key + sizeof(*key) + sizeof(key->dims[0]) * dims;
-  for (int i = 0; i < dims; i++) {
-    key->dims[i] = (c_vl_key_t *)ptr;
-    key->dims[i]->length = lens[i];
-    memcpy(key->dims[i]->key, keys[i], lens[i]);
-    ptr += sizeof(*key->dims[i]) + lens[i];
-  }
-
-  assert(ptr - (char *)key == (int64_t)needed);
-
-  return needed;
 }
 
 uint32_t
-castle_build_key(castle_key *key, size_t buf_len, int dims, const int *key_lens, const uint8_t * const*keys) {
-  uint32_t needed = castle_build_key_len(key, buf_len, dims, key_lens, keys);
+castle_build_key(castle_key *key, size_t buf_len, int dims, const int *key_lens,
+                 const uint8_t * const*keys, const uint8_t *key_flags) {
+  uint32_t needed = castle_build_key_len(key, buf_len, dims, key_lens, keys, key_flags);
   if (needed <= buf_len)
     return 0;
   else
     return needed;
 }
 
+/* Note: We don't really need key_flags here. But, in future it possible to have a flag which
+ * might has an effect on key internal size. */
 uint32_t
-castle_key_bytes_needed(int dims, const int *key_lens, const uint8_t * const*keys) {
-  return castle_build_key(NULL, 0, dims, key_lens, keys);
+castle_key_bytes_needed(int dims, const int *key_lens, const uint8_t * const*keys, const uint8_t *key_flags) {
+  return castle_build_key(NULL, 0, dims, key_lens, keys, key_flags);
 }
 
 castle_key *
-castle_malloc_key(int dims, const int *key_lens, const uint8_t * const*keys) {
-  uint32_t len = castle_key_bytes_needed(dims, key_lens, keys);
+castle_malloc_key(int dims, const int *key_lens, const uint8_t * const*keys, const uint8_t *key_flags) {
+  uint32_t len = castle_key_bytes_needed(dims, key_lens, keys, key_flags);
   castle_key *key = malloc(len);
   if (!key)
     return NULL;
-  if (0 != castle_build_key(key, len, dims, key_lens, keys))
+  if (0 != castle_build_key(key, len, dims, key_lens, keys, key_flags))
     abort();
   return key;
 }
@@ -72,24 +93,27 @@ castle_malloc_key(int dims, const int *key_lens, const uint8_t * const*keys) {
 static int make_key_buffer(castle_connection *conn, castle_key *key, uint32_t extra_space, char **key_buf_out, uint32_t *key_len_out) {
   int dims = key->nr_dims;
   int lens[dims];
-  uint8_t *keys[dims];
+  const uint8_t *keys[dims];
+  uint8_t flags[dims];
   char *key_buf;
   uint32_t key_len;
   int err;
 
   for (int i = 0; i < dims; i++) {
-    lens[i] = key->dims[i]->length;
-    keys[i] = key->dims[i]->key;
+    lens[i] = castle_key_elem_len(key, i);
+    keys[i] = castle_key_elem_data(key, i);
+    flags[i] = castle_key_elem_flags(key, i);
   }
 
-  key_len = castle_key_bytes_needed(dims, lens, NULL);
+  key_len = castle_key_bytes_needed(dims, lens, NULL, NULL);
 
   err = castle_shared_buffer_create(conn, &key_buf, key_len + extra_space);
   if (err)
     return err;
 
   {
-    int r = castle_build_key((castle_key *)key_buf, key_len, dims, lens, (const uint8_t *const *)keys);
+    int r = castle_build_key((castle_key *)key_buf, key_len, dims, lens,
+                             (const uint8_t *const *)keys, flags);
     if (r != 0)
       /* impossible */
       abort();
@@ -105,39 +129,45 @@ static int make_2key_buffer(castle_connection *conn, castle_key *key1, castle_ke
   int dims2 = key2->nr_dims;
   int lens1[dims1];
   int lens2[dims2];
-  uint8_t *keys1[dims1];
-  uint8_t *keys2[dims2];
+  const uint8_t *keys1[dims1];
+  const uint8_t *keys2[dims2];
+  uint8_t flags1[dims1];
+  uint8_t flags2[dims2];
   char *key_buf;
   uint32_t key1_len;
   uint32_t key2_len;
   int err;
 
   for (int i = 0; i < dims1; i++) {
-    lens1[i] = key1->dims[i]->length;
-    keys1[i] = key1->dims[i]->key;
+    lens1[i] = castle_key_elem_len(key1, i);
+    keys1[i] = castle_key_elem_data(key1, i);
+    flags1[i] = castle_key_elem_flags(key1, i);
   }
 
   for (int i = 0; i < dims2; i++) {
-    lens2[i] = key2->dims[i]->length;
-    keys2[i] = key2->dims[i]->key;
+    lens2[i] = castle_key_elem_len(key2, i);
+    keys2[i] = castle_key_elem_data(key2, i);
+    flags2[i] = castle_key_elem_flags(key2, i);
   }
 
-  key1_len = castle_key_bytes_needed(dims1, lens1, NULL);
-  key2_len = castle_key_bytes_needed(dims2, lens2, NULL);
+  key1_len = castle_key_bytes_needed(dims1, lens1, NULL, NULL);
+  key2_len = castle_key_bytes_needed(dims2, lens2, NULL, NULL);
 
   err = castle_shared_buffer_create(conn, &key_buf, key1_len + key2_len);
   if (err)
     return err;
 
   {
-    int r = castle_build_key((castle_key *)key_buf, key1_len, dims1, lens1, (const uint8_t *const *)keys1);
+    int r = castle_build_key((castle_key *)key_buf, key1_len, dims1, lens1,
+                             (const uint8_t *const *)keys1, flags1);
     if (r != 0)
       /* impossible */
       abort();
   }
 
   {
-    int r = castle_build_key((castle_key *)(key_buf + key1_len), key2_len, dims2, lens2, (const uint8_t *const *)keys2);
+    int r = castle_build_key((castle_key *)(key_buf + key1_len), key2_len, dims2,
+                             lens2, (const uint8_t *const *)keys2, flags2);
     if (r != 0)
       /* impossible */
       abort();
@@ -153,42 +183,23 @@ static int make_2key_buffer(castle_connection *conn, castle_key *key1, castle_ke
 
 /*
  * Assumes key is contiguous in memory
+ * Note: bkey is always contiguous in memory.
  */
-static int copy_key(c_vl_okey_t *key, void *buf, uint32_t key_len)
+int castle_key_copy(c_vl_bkey_t *key, void *buf, uint32_t buf_len)
 {
-     c_vl_okey_t *new_key = buf;
-     unsigned int i;
+    if (!key || !buf)
+        return -EINVAL;
 
-     memcpy(buf, key, key_len);
+    uint32_t key_len = castle_key_length(key);
+    if (key_len > buf_len)
+        return -ENOMEM;
 
-     if ((new_key->nr_dims * sizeof(c_vl_key_t *)) > (key_len - sizeof(c_vl_okey_t)))
-     {
-         return -EINVAL;
-     }
+    memcpy(buf, key, key_len);
 
-     for (i=0; i < new_key->nr_dims; i++)
-         new_key->dims[i] = (void *) (((unsigned long) new_key->dims[i]) -
-           ((unsigned long) key) + ((unsigned long) buf));
-
-     return 0;
+    return 0;
 }
 
 #define max(_a, _b) ((_a) > (_b) ? (_a) : (_b))
-
-/*
- * Assumes key is contiguous in memory
- */
-static uint32_t get_key_len(c_vl_okey_t *key)
-{
-
-    uint32_t i;
-    unsigned long end = 0;
-
-    for (i=0; i < key->nr_dims; i++)
-        end = max(end, ((unsigned long) key->dims[i]) + sizeof(c_vl_key_t) + key->dims[i]->length);
-
-    return end - (unsigned long) key;
-}
 
 int castle_get(castle_connection *conn,
                c_collection_id_t collection,
@@ -406,7 +417,7 @@ int castle_iter_next(castle_connection *conn,
     {
         while (curr != NULL)
         {
-            unsigned long key_len = get_key_len(curr->key);
+            unsigned long key_len = castle_key_length(curr->key);
 
             copy = calloc(1, sizeof(*copy));
             if (!copy)
@@ -421,7 +432,7 @@ int castle_iter_next(castle_connection *conn,
                 err = -ENOMEM;
                 goto err2;
             }
-            err = copy_key(curr->key, copy->key, key_len);
+            err = castle_key_copy(curr->key, copy->key, key_len);
             if (err) goto err2;
 
             copy->val = malloc(sizeof(*(copy->val)));
