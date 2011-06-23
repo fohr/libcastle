@@ -460,15 +460,6 @@ typedef struct castle_request_replace {
     uint32_t              value_len;
 } castle_request_replace_t;
 
-typedef struct castle_request_counter_replace {
-    c_collection_id_t     collection_id;
-    c_vl_okey_t          *key_ptr;
-    uint8_t               add; /* 0: SET op, 1: ADD op */
-    uint32_t              key_len;
-    void                 *value_ptr;
-    uint32_t              value_len;
-} castle_request_counter_replace_t;
-
 typedef struct castle_request_remove {
     c_collection_id_t     collection_id;
     c_vl_okey_t          *key_ptr;
