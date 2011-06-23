@@ -105,15 +105,17 @@ static void *castle_response_thread(void *data)
             if(conn->callbacks[resp->call_id].callback)
                 conn->callbacks[resp->call_id].callback(conn, resp, conn->callbacks[resp->call_id].data);
 
+            bool has_token = conn->callbacks[resp->call_id].token != 0;
+            unsigned int request_id = conn->callbacks[resp->call_id].token % CASTLE_STATEFUL_OPS;
+
             pthread_mutex_lock(&conn->free_mutex);
             list_add(&conn->callbacks[resp->call_id].list, &conn->free_callbacks);
             pthread_mutex_unlock(&conn->free_mutex);
 
-            if (conn->callbacks[resp->call_id].token) {
-              unsigned int x = conn->callbacks[resp->call_id].token % CASTLE_STATEFUL_OPS;
-              assert(x < CASTLE_STATEFUL_OPS);
-              assert(conn->outstanding_stateful_requests[x] > 0);
-              int new = __sync_sub_and_fetch(&conn->outstanding_stateful_requests[x], 1);
+            if (has_token) {
+              assert(request_id < CASTLE_STATEFUL_OPS);
+              assert(conn->outstanding_stateful_requests[request_id] > 0);
+              int new = __sync_sub_and_fetch(&conn->outstanding_stateful_requests[request_id], 1);
               if (new == 0)
                 atomic_inc(&conn->front_ring.reserved);
             }
