@@ -385,6 +385,9 @@ void castle_kvs_free(struct castle_key_value_list *kvs)
     }
 }
 
+#define VALUE_INLINE(_type)     ((_type == CASTLE_VALUE_TYPE_INLINE) ||             \
+                                 (_type == CASTLE_VALUE_TYPE_INLINE_COUNTER))
+
 int castle_iter_next(castle_connection *conn,
                      castle_interface_token_t token,
                      struct castle_key_value_list **kvs,
@@ -443,7 +446,7 @@ int castle_iter_next(castle_connection *conn,
             }
             memcpy(copy->val, curr->val, sizeof(*(copy->val)));
 
-            if (curr->val->type & CVT_TYPE_INLINE)
+            if (VALUE_INLINE(curr->val->type))
             {
                 copy->val->val = malloc(copy->val->length);
                 if (!copy->val->val)
@@ -464,7 +467,7 @@ int castle_iter_next(castle_connection *conn,
                 copy->val->val = (uint8_t *)val;
 
                 /* pretend it is inline since the value is now 'inline' */
-                copy->val->type = CVT_TYPE_INLINE;
+                copy->val->type = CASTLE_VALUE_TYPE_INLINE;
             }
 
             if (!head)
