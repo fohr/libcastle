@@ -1,0 +1,18 @@
+syntax: glob
+._*
+*.annot
+*.cmi
+*.o
+*.cmx
+\#*
+*.orig
+*.rej
+*.swp
+*.a
+*.cma
+*.cmo
+*.so
+*.cmxa
+*~
+*.so.1
+.DS_Store
