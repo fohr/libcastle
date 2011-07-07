@@ -24,5 +24,14 @@ install: $(SONAME)
 	install castle_public.h $(INC_DESTDIR)
 	install castle.h $(INC_DESTDIR)
 
+.PHONY: tags
+tags:
+	ctags *.c *.h
+
+.PHONY: cscope
+
+cscope:
+	cscope -b -q *.c *.h
+
 clean:
-	rm -rf *.o *.so*
+	rm -rf *.o *.so* cscope*
