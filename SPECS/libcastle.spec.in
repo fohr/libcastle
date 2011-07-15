@@ -1,10 +1,6 @@
-%if !%{release}
-%define release 1
-%endif
-
 Name:           libcastle
 Version:        @@SOURCEVER@@
-Release:        %{release}
+Release:        %{?release}%{?!release:1}
 Summary:        C library for castle fs
 
 Group:          Filesystem
