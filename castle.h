@@ -99,7 +99,7 @@ ONLY_INLINE void castle_replace_prepare(castle_request *req, castle_collection c
 
 extern void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) __attribute__((always_inline));
 ONLY_INLINE void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) {
-  req->tag = CASTLE_RING_COUNTER_SET_REPLACE;
+  req->tag = CASTLE_RING_COUNTER_REPLACE;
   req->counter_replace.collection_id = collection;
   req->counter_replace.key_ptr = key;
   req->counter_replace.key_len = key_len;
@@ -110,7 +110,7 @@ ONLY_INLINE void castle_counter_set_replace_prepare(castle_request *req, castle_
 
 extern void castle_counter_add_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) __attribute__((always_inline));
 ONLY_INLINE void castle_counter_add_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) {
-  req->tag = CASTLE_RING_COUNTER_ADD_REPLACE;
+  req->tag = CASTLE_RING_COUNTER_REPLACE;
   req->counter_replace.collection_id = collection;
   req->counter_replace.key_ptr = key;
   req->counter_replace.key_len = key_len;
