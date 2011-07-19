@@ -105,7 +105,7 @@ ONLY_INLINE void castle_counter_set_replace_prepare(castle_request *req, castle_
   req->counter_replace.key_len = key_len;
   req->counter_replace.value_ptr = value;
   req->counter_replace.value_len = value_len;
-  req->counter_replace.add = 0; /* SET flag */
+  req->counter_replace.add = CASTLE_COUNTER_TYPE_SET;
 }
 
 extern void castle_counter_add_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) __attribute__((always_inline));
@@ -116,7 +116,7 @@ ONLY_INLINE void castle_counter_add_replace_prepare(castle_request *req, castle_
   req->counter_replace.key_len = key_len;
   req->counter_replace.value_ptr = value;
   req->counter_replace.value_len = value_len;
-  req->counter_replace.add = 1; /* ADD flag */
+  req->counter_replace.add = CASTLE_COUNTER_TYPE_ADD;
 }
 
 extern void castle_remove_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len) __attribute__((always_inline));
