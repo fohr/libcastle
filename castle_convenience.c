@@ -356,10 +356,15 @@ int castle_iter_start(castle_connection *conn,
     err = make_2key_buffer(conn, start_key, end_key, &key_buf, &start_key_len, &end_key_len);
     if (err) goto err0;
 
-    castle_iter_start_prepare(&req, collection,
-        (castle_key *) key_buf,  start_key_len,
-        (castle_key *) ((unsigned long)key_buf + (unsigned long)start_key_len),  end_key_len,
-        CASTLE_RING_ITER_FLAG_NONE);
+    castle_iter_start_prepare(&req,                         /* request          */
+                              collection,                   /* collection       */
+                              (castle_key *) key_buf,       /* start_key        */
+                              start_key_len,                /* start_key_len    */
+                              (castle_key *) ((unsigned long)key_buf + (unsigned long)start_key_len),   /* end_key */
+                              end_key_len,                  /* end_key_len      */
+                              NULL,                         /* buffer           */
+                              0,                            /* buffer_len       */
+                              CASTLE_RING_ITER_FLAG_NONE);  /* flags            */
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;

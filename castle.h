@@ -137,27 +137,59 @@ ONLY_INLINE void castle_get_prepare(castle_request *req, castle_collection colle
   req->get.value_len = buffer_len;
 }
 
-extern void castle_iter_start_prepare(castle_request *req, castle_collection collection, castle_key *start_key, uint32_t start_key_len, castle_key *end_key, uint32_t end_key_len, uint64_t flags) __attribute__((always_inline));
-ONLY_INLINE void castle_iter_start_prepare(castle_request *req, castle_collection collection, castle_key *start_key, uint32_t start_key_len, castle_key *end_key, uint32_t end_key_len, uint64_t flags) {
+/* CASTLE_BACK_ITER_START */
+extern void castle_iter_start_prepare(castle_request *req,
+                                      castle_collection collection,
+                                      castle_key *start_key,
+                                      uint32_t start_key_len,
+                                      castle_key *end_key,
+                                      uint32_t end_key_len,
+                                      char *buffer,
+                                      uint32_t buffer_len,
+                                      uint64_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_iter_start_prepare(castle_request *req,
+                                           castle_collection collection,
+                                           castle_key *start_key,
+                                           uint32_t start_key_len,
+                                           castle_key *end_key,
+                                           uint32_t end_key_len,
+                                           char *buffer,
+                                           uint32_t buffer_len,
+                                           uint64_t flags)
+{
   req->tag = CASTLE_RING_ITER_START;
   req->iter_start.collection_id = collection;
   req->iter_start.start_key_ptr = start_key;
   req->iter_start.start_key_len = start_key_len;
   req->iter_start.end_key_ptr = end_key;
   req->iter_start.end_key_len = end_key_len;
+  req->iter_start.buffer_ptr = buffer;
+  req->iter_start.buffer_len = buffer_len;
   req->iter_start.flags = flags;
 }
 
-extern void castle_iter_next_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) __attribute__((always_inline));
-ONLY_INLINE void castle_iter_next_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) {
+/* CASTLE_BACK_ITER_NEXT */
+extern void castle_iter_next_prepare(castle_request *req,
+                                     castle_token token,
+                                     char *buffer,
+                                     uint32_t buffer_len) __attribute__((always_inline));
+ONLY_INLINE void castle_iter_next_prepare(castle_request *req,
+                                          castle_token token,
+                                          char *buffer,
+                                          uint32_t buffer_len)
+{
   req->tag = CASTLE_RING_ITER_NEXT;
   req->iter_next.token = token;
   req->iter_next.buffer_ptr = buffer;
   req->iter_next.buffer_len = buffer_len;
 }
 
-extern void castle_iter_finish_prepare(castle_request *req, castle_token token) __attribute__((always_inline));
-ONLY_INLINE void castle_iter_finish_prepare(castle_request *req, castle_token token) {
+/* CASTLE_BACK_ITER_FINISH */
+extern void castle_iter_finish_prepare(castle_request *req,
+                                       castle_token token) __attribute__((always_inline));
+ONLY_INLINE void castle_iter_finish_prepare(castle_request *req,
+                                            castle_token token)
+{
   req->tag = CASTLE_RING_ITER_FINISH;
   req->iter_finish.token = token;
 }

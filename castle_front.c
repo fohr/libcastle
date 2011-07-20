@@ -605,8 +605,8 @@ static void castle_blocking_callback(castle_connection *conn __attribute__((unus
 }
 
 int castle_request_do_blocking(castle_connection *conn,
-                                     castle_request_t *req,
-                                     struct castle_blocking_call *blocking_call)
+                               castle_request_t *req,
+                               struct castle_blocking_call *blocking_call)
 {
     /*
      * Warning variables these will be on stack but used elsewhere, only safe as
