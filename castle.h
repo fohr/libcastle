@@ -355,6 +355,10 @@ int castle_get_chunk       (castle_connection *conn,
         collection_attach,                                                                        \
         CASTLE_CTRL_COLLECTION_ATTACH,                                                            \
         version, version, string, name, size, name_length, collection_id, collection)             \
+  CASTLE_IOCTL_2IN_0OUT(                                                                          \
+        collection_reattach,                                                                      \
+        CASTLE_CTRL_COLLECTION_REATTACH,                                                          \
+        collection_id, collection, version, new_version)                                          \
   CASTLE_IOCTL_1IN_0OUT(                                                                          \
         collection_detach,                                                                        \
         CASTLE_CTRL_COLLECTION_DETACH,                                                            \
