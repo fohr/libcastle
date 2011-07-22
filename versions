@@ -44,6 +44,7 @@ CASTLE_1 {
         castle_claim_dev;
         castle_clone;
         castle_collection_attach;
+        castle_collection_reattach;
         castle_collection_detach;
         castle_collection_snapshot;
         castle_environment_set;
