@@ -75,6 +75,11 @@ void castle_request_send          (castle_connection *conn,
                                    castle_callback *callbacks,
                                    void **userdatas,
                                    int reqs_count);
+int castle_request_send_batch    (castle_connection *conn,
+                                   castle_request *req,
+                                   castle_callback callback,
+                                   void *userdata,
+                                   int reqs_count);
 int castle_request_do_blocking    (castle_connection *conn,
                                    castle_request *req,
                                    struct castle_blocking_call *blocking_call);

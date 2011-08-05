@@ -8,6 +8,7 @@ CASTLE_1 {
         castle_request_do_blocking;
         castle_request_do_blocking_multi;
         castle_request_send;
+        castle_request_send_batch;
         castle_shared_buffer_create;
         castle_shared_buffer_destroy;
         castle_shared_buffer_allocate;

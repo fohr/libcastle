@@ -492,6 +492,82 @@ ring_full_for(castle_connection *conn, castle_request_t *req) {
   return space <= reserved;
 }
 
+typedef struct
+{
+    castle_callback callback;
+    void* userdata;
+    uint32_t remaining;
+} castle_batch_userdata;
+
+static void castle_batch_callback(
+        castle_connection* conn __attribute__((unused)),
+        castle_response_t* resp,
+        void* userdata
+)
+{
+    castle_batch_userdata* data = (castle_batch_userdata*)userdata;
+    uint32_t remaining = __sync_sub_and_fetch(&data->remaining, 1);
+    if (!remaining)
+    {
+        data->callback(conn, resp, data->userdata);
+        free(data);
+    }
+}
+
+int castle_request_send_batch(
+        castle_connection *conn,
+        castle_request *req,
+        castle_callback callback,
+        void *userdata,
+        int reqs_count
+)
+{
+    int err = 0;
+    castle_batch_userdata* data = NULL;
+    castle_callback* callbacks = NULL;
+    void** userdatas = NULL;
+
+    data = calloc(1, sizeof(*data));
+    if (!data)
+    {
+        err = -ENOMEM;
+        goto out0;
+    }
+    data->callback = callback;
+    data->userdata = userdata;
+    data->remaining = reqs_count;
+
+    userdatas = calloc(reqs_count, sizeof(*userdatas));
+    if (!userdatas)
+    {
+        err = -ENOMEM;
+        goto err0;
+    }
+    callbacks = calloc(reqs_count, sizeof(*callbacks));
+    if (!callbacks)
+    {
+        err = -ENOMEM;
+        goto err0;
+    }
+
+    for (int i = 0; i < reqs_count; ++i)
+    {
+        callbacks[i] = &castle_batch_callback;
+        userdatas[i] = data;
+    }
+
+    castle_request_send(conn, req, callbacks, userdatas, reqs_count);
+    goto out1;
+
+err0:
+    free(data);
+out1:
+    free(callbacks);
+    free(userdatas);
+out0:
+    return err;
+}
+
 void castle_request_send(castle_connection *conn,
                                castle_request_t *req, castle_callback *callbacks,
                                void **datas, int reqs_count)
