@@ -497,6 +497,7 @@ typedef struct
     castle_callback callback;
     void* userdata;
     uint32_t remaining;
+    uint32_t err;
 } castle_batch_userdata;
 
 static void castle_batch_callback(
@@ -506,9 +507,15 @@ static void castle_batch_callback(
 )
 {
     castle_batch_userdata* data = (castle_batch_userdata*)userdata;
+
+    // set the error and ignore any conflict
+    if (!data->err && resp->err)
+        __sync_val_compare_and_swap(&data->err, 0, resp->err);
+
     uint32_t remaining = __sync_sub_and_fetch(&data->remaining, 1);
     if (!remaining)
     {
+        resp->err = data->err;
         data->callback(conn, resp, data->userdata);
         free(data);
     }
@@ -527,33 +534,40 @@ int castle_request_send_batch(
     castle_callback* callbacks = NULL;
     void** userdatas = NULL;
 
-    data = calloc(1, sizeof(*data));
-    if (!data)
+    if (reqs_count > 1)
     {
-        err = -ENOMEM;
-        goto out0;
-    }
-    data->callback = callback;
-    data->userdata = userdata;
-    data->remaining = reqs_count;
+        data = calloc(1, sizeof(*data));
+        if (!data)
+        {
+            err = -ENOMEM;
+            goto out0;
+        }
+        data->callback = callback;
+        data->userdata = userdata;
+        data->remaining = reqs_count;
 
-    userdatas = calloc(reqs_count, sizeof(*userdatas));
-    if (!userdatas)
-    {
-        err = -ENOMEM;
-        goto err0;
-    }
-    callbacks = calloc(reqs_count, sizeof(*callbacks));
-    if (!callbacks)
-    {
-        err = -ENOMEM;
-        goto err0;
-    }
+        userdatas = calloc(reqs_count, sizeof(*userdatas));
+        if (!userdatas)
+        {
+            err = -ENOMEM;
+            goto err0;
+        }
+        callbacks = calloc(reqs_count, sizeof(*callbacks));
+        if (!callbacks)
+        {
+            err = -ENOMEM;
+            goto err0;
+        }
 
-    for (int i = 0; i < reqs_count; ++i)
+        for (int i = 0; i < reqs_count; ++i)
+        {
+            callbacks[i] = &castle_batch_callback;
+            userdatas[i] = data;
+        }
+    } else
     {
-        callbacks[i] = &castle_batch_callback;
-        userdatas[i] = data;
+        callbacks = &callback;
+        userdatas = &userdata;
     }
 
     castle_request_send(conn, req, callbacks, userdatas, reqs_count);
@@ -562,8 +576,11 @@ int castle_request_send_batch(
 err0:
     free(data);
 out1:
-    free(callbacks);
-    free(userdatas);
+    if (reqs_count > 1)
+    {
+        free(callbacks);
+        free(userdatas);
+    }
 out0:
     return err;
 }
