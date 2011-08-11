@@ -92,9 +92,10 @@ int castle_print_key(FILE *f, castle_key *key);
 int castle_print_request(FILE *f, castle_request *req, int print_values);
 int castle_print_response(FILE *f, castle_response *resp, int print_values);
 
-extern void castle_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) __attribute__((always_inline));
-ONLY_INLINE void castle_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) {
+extern void castle_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) {
   req->tag = CASTLE_RING_REPLACE;
+  req->flags = flags;
   req->replace.collection_id = collection;
   req->replace.key_ptr = key;
   req->replace.key_len = key_len;
@@ -102,9 +103,10 @@ ONLY_INLINE void castle_replace_prepare(castle_request *req, castle_collection c
   req->replace.value_len = value_len;
 }
 
-extern void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) __attribute__((always_inline));
-ONLY_INLINE void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) {
+extern void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) {
   req->tag = CASTLE_RING_COUNTER_REPLACE;
+  req->flags = flags;
   req->counter_replace.collection_id = collection;
   req->counter_replace.key_ptr = key;
   req->counter_replace.key_len = key_len;
@@ -113,9 +115,10 @@ ONLY_INLINE void castle_counter_set_replace_prepare(castle_request *req, castle_
   req->counter_replace.add = CASTLE_COUNTER_TYPE_SET;
 }
 
-extern void castle_counter_add_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) __attribute__((always_inline));
-ONLY_INLINE void castle_counter_add_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len) {
+extern void castle_counter_add_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_counter_add_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) {
   req->tag = CASTLE_RING_COUNTER_REPLACE;
+  req->flags = flags;
   req->counter_replace.collection_id = collection;
   req->counter_replace.key_ptr = key;
   req->counter_replace.key_len = key_len;
@@ -124,17 +127,19 @@ ONLY_INLINE void castle_counter_add_replace_prepare(castle_request *req, castle_
   req->counter_replace.add = CASTLE_COUNTER_TYPE_ADD;
 }
 
-extern void castle_remove_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len) __attribute__((always_inline));
-ONLY_INLINE void castle_remove_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len) {
+extern void castle_remove_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_remove_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint8_t flags) {
   req->tag = CASTLE_RING_REMOVE;
+  req->flags = flags;
   req->replace.collection_id = collection;
   req->replace.key_ptr = key;
   req->replace.key_len = key_len;
 }
 
-extern void castle_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *buffer, uint32_t buffer_len) __attribute__((always_inline));
-ONLY_INLINE void castle_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *buffer, uint32_t buffer_len) {
+extern void castle_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *buffer, uint32_t buffer_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *buffer, uint32_t buffer_len, uint8_t flags) {
   req->tag = CASTLE_RING_GET;
+  req->flags = flags;
   req->get.collection_id = collection;
   req->get.key_ptr = key;
   req->get.key_len = key_len;
@@ -142,59 +147,65 @@ ONLY_INLINE void castle_get_prepare(castle_request *req, castle_collection colle
   req->get.value_len = buffer_len;
 }
 
-extern void castle_iter_start_prepare(castle_request *req, castle_collection collection, castle_key *start_key, uint32_t start_key_len, castle_key *end_key, uint32_t end_key_len, uint64_t flags) __attribute__((always_inline));
-ONLY_INLINE void castle_iter_start_prepare(castle_request *req, castle_collection collection, castle_key *start_key, uint32_t start_key_len, castle_key *end_key, uint32_t end_key_len, uint64_t flags) {
+extern void castle_iter_start_prepare(castle_request *req, castle_collection collection, castle_key *start_key, uint32_t start_key_len, castle_key *end_key, uint32_t end_key_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_iter_start_prepare(castle_request *req, castle_collection collection, castle_key *start_key, uint32_t start_key_len, castle_key *end_key, uint32_t end_key_len, uint8_t flags) {
   req->tag = CASTLE_RING_ITER_START;
+  req->flags = flags;
   req->iter_start.collection_id = collection;
   req->iter_start.start_key_ptr = start_key;
   req->iter_start.start_key_len = start_key_len;
   req->iter_start.end_key_ptr = end_key;
   req->iter_start.end_key_len = end_key_len;
-  req->iter_start.flags = flags;
 }
 
-extern void castle_iter_next_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) __attribute__((always_inline));
-ONLY_INLINE void castle_iter_next_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) {
+extern void castle_iter_next_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_iter_next_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len, uint8_t flags) {
   req->tag = CASTLE_RING_ITER_NEXT;
+  req->flags = flags;
   req->iter_next.token = token;
   req->iter_next.buffer_ptr = buffer;
   req->iter_next.buffer_len = buffer_len;
 }
 
-extern void castle_iter_finish_prepare(castle_request *req, castle_token token) __attribute__((always_inline));
-ONLY_INLINE void castle_iter_finish_prepare(castle_request *req, castle_token token) {
+extern void castle_iter_finish_prepare(castle_request *req, castle_token token, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_iter_finish_prepare(castle_request *req, castle_token token, uint8_t flags) {
   req->tag = CASTLE_RING_ITER_FINISH;
+  req->flags = flags;
   req->iter_finish.token = token;
 }
 
-extern void castle_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len) __attribute__((always_inline));
-ONLY_INLINE void castle_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len) {
+extern void castle_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len, uint8_t flags) {
   req->tag = CASTLE_RING_BIG_PUT;
+  req->flags = flags;
   req->big_put.collection_id = collection;
   req->big_put.key_ptr = key;
   req->big_put.key_len = key_len;
   req->big_put.value_len = value_len;
 }
 
-extern void castle_put_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) __attribute__((always_inline));
-ONLY_INLINE void castle_put_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) {
+extern void castle_put_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_put_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len, uint8_t flags) {
   req->tag = CASTLE_RING_PUT_CHUNK;
+  req->flags = flags;
   req->put_chunk.token = token;
   req->put_chunk.buffer_ptr = buffer;
   req->put_chunk.buffer_len = buffer_len;
 }
 
-extern void castle_big_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len) __attribute__((always_inline));
-ONLY_INLINE void castle_big_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len) {
+extern void castle_big_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_big_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint8_t flags) {
   req->tag = CASTLE_RING_BIG_GET;
+  req->flags = flags;
   req->big_get.collection_id = collection;
   req->big_get.key_ptr = key;
   req->big_get.key_len = key_len;
 }
 
-extern void castle_get_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) __attribute__((always_inline));
-ONLY_INLINE void castle_get_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len) {
+extern void castle_get_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_get_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len, uint8_t flags) {
   req->tag = CASTLE_RING_GET_CHUNK;
+  req->flags = flags;
   req->get_chunk.token = token;
   req->get_chunk.buffer_ptr = buffer;
   req->get_chunk.buffer_len = buffer_len;

@@ -63,7 +63,10 @@ static const char *command_names[] = {
 int
 castle_print_request(FILE *f, castle_request *req, int print_values) {
   int len = 0;
-  call_stdio_len(fprintf(f, "%s(call_id=%u, ", command_names[req->tag], req->call_id));
+
+  call_stdio_len(fprintf(f, "%s(call_id=%u, flags=0x%x ",
+        command_names[req->tag], req->call_id, req->flags));
+
   switch (req->tag) {
   case CASTLE_RING_REPLACE:
     {
@@ -106,13 +109,6 @@ castle_print_request(FILE *f, castle_request *req, int print_values) {
     call_stdio_len(castle_print_key(f, req->iter_start.start_key_ptr));
     call_stdio_len(fprintf(f, ", end_key="));
     call_stdio_len(castle_print_key(f, req->iter_start.end_key_ptr));
-    call_stdio_len(fprintf(f, ", flags="));
-    if (req->iter_start.flags & ~CASTLE_RING_ITER_FLAG_NO_VALUES)
-      call_stdio_len(fprintf(f, "error(%llx)", (long long unsigned)req->iter_start.flags));
-    else if (req->iter_start.flags & CASTLE_RING_ITER_FLAG_NO_VALUES)
-      call_stdio_len(fprintf(f, "no_values"));
-    else
-      call_stdio_len(fprintf(f, "none"));
     break;
   case CASTLE_RING_ITER_NEXT:
     call_stdio_len(fprintf(f, "token=%u, buffer=%p, buffer_len=%u", req->iter_next.token, req->iter_next.buffer_ptr, req->iter_next.buffer_len));

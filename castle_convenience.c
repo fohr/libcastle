@@ -220,8 +220,13 @@ int castle_get(castle_connection *conn,
     err = castle_shared_buffer_create(conn, &val_buf, val_len);
     if (err) goto err1;
 
-    castle_get_prepare(&req, collection, (castle_key *) key_buf,
-        key_len, val_buf, val_len);
+    castle_get_prepare(&req,
+                       collection,
+                       (castle_key *) key_buf,
+                       key_len,
+                       val_buf,
+                       val_len,
+                       CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err2;
@@ -305,8 +310,12 @@ int castle_replace(castle_connection *conn,
 
     memcpy(buf + key_len, val, val_len);
 
-    castle_replace_prepare(&req, collection, (castle_key *) buf,
-        key_len, buf + key_len, val_len);
+    castle_replace_prepare(&req,
+                           collection,
+                           (castle_key *) buf,
+                           key_len, buf + key_len,
+                           val_len,
+                           CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
@@ -328,8 +337,11 @@ int castle_remove(castle_connection *conn,
     err = make_key_buffer(conn, key, 0, &key_buf, &key_len);
     if (err) goto err0;
 
-    castle_remove_prepare(&req, collection,
-        (castle_key *) key_buf,  key_len);
+    castle_remove_prepare(&req,
+                          collection,
+                          (castle_key *) key_buf,
+                          key_len,
+                          CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
@@ -356,10 +368,13 @@ int castle_iter_start(castle_connection *conn,
     err = make_2key_buffer(conn, start_key, end_key, &key_buf, &start_key_len, &end_key_len);
     if (err) goto err0;
 
-    castle_iter_start_prepare(&req, collection,
-        (castle_key *) key_buf,  start_key_len,
-        (castle_key *) ((unsigned long)key_buf + (unsigned long)start_key_len),  end_key_len,
-        CASTLE_RING_ITER_FLAG_NONE);
+    castle_iter_start_prepare(&req,
+                              collection,
+                              (castle_key *) key_buf,
+                              start_key_len,
+                              (castle_key *) ((unsigned long)key_buf + (unsigned long)start_key_len),
+                              end_key_len,
+                              CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
@@ -404,7 +419,7 @@ int castle_iter_next(castle_connection *conn,
     err = castle_shared_buffer_create(conn, &buf, buf_size);
     if (err) goto err0;
 
-    castle_iter_next_prepare(&req, token, buf, buf_size);
+    castle_iter_next_prepare(&req, token, buf, buf_size, CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
@@ -498,7 +513,7 @@ int castle_iter_finish(castle_connection *conn,
     castle_request_t req;
     int err = 0;
 
-    castle_iter_finish_prepare(&req, token);
+    castle_iter_finish_prepare(&req, token, CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
 
@@ -582,8 +597,12 @@ int castle_big_put         (castle_connection *conn,
     err = make_key_buffer(conn, key, 0, &key_buf, &key_len);
     if (err) goto err0;
 
-    castle_big_put_prepare(&req, collection,
-        (castle_key *) key_buf,  key_len, val_length);
+    castle_big_put_prepare(&req,
+                           collection,
+                           (castle_key *) key_buf,
+                           key_len,
+                           val_length,
+                           CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
@@ -608,7 +627,7 @@ int castle_put_chunk       (castle_connection *conn,
 
     memcpy(buf, value, value_len);
 
-    castle_put_chunk_prepare(&req, token, buf, value_len);
+    castle_put_chunk_prepare(&req, token, buf, value_len, CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
@@ -633,8 +652,11 @@ int castle_big_get         (castle_connection *conn,
     err = make_key_buffer(conn, key, 0, &key_buf, &key_len);
     if (err) goto err0;
 
-    castle_big_get_prepare(&req, collection,
-        (castle_key *) key_buf,  key_len);
+    castle_big_get_prepare(&req,
+                           collection,
+                           (castle_key *) key_buf,
+                           key_len,
+                           CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
@@ -662,7 +684,7 @@ int castle_get_chunk       (castle_connection *conn,
     err = castle_shared_buffer_create(conn, &buf, VALUE_LEN);
     if (err) goto err0;
 
-    castle_get_chunk_prepare(&req, token, buf, VALUE_LEN);
+    castle_get_chunk_prepare(&req, token, buf, VALUE_LEN, CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
