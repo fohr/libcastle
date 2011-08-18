@@ -649,7 +649,7 @@ process_loop:
         curr = curr->next;
     }
 
-    if (more && count < limit)
+    if (more && (!limit || count < limit))
     {
         /* The iterator has more keys. */
         err = castle_iter_next(conn, token, &curr, PAGE_SIZE, &more);
