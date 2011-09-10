@@ -366,17 +366,9 @@ int castle_get_chunk       (castle_connection *conn,
 #define C_TYPE_int int
 #define C_TYPE_int32 int32_t
 #define C_TYPE_da_id_t castle_da
-#define C_TYPE_merge_id_t c_merge_id_t
-#define C_TYPE_thread_id_t c_thread_id_t
-#define C_TYPE_work_id_t c_work_id_t
-#define C_TYPE_work_size_t c_work_size_t
-
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
   int castle_##_id (castle_connection *conn);
-
-#define CASTLE_IOCTL_0IN_1OUT(_id, _name, _ret_1_t, _ret)                                         \
-  int castle_##_id (castle_connection *conn, C_TYPE_##_ret_1_t * _ret);
 
 #define CASTLE_IOCTL_1IN_0OUT(_id, _name, _arg_1_t, _arg_1)                                       \
   int castle_##_id (castle_connection *conn, C_TYPE_##_arg_1_t _arg_1);
@@ -388,10 +380,6 @@ int castle_get_chunk       (castle_connection *conn,
 #define CASTLE_IOCTL_2IN_0OUT(_id, _name, _arg_1_t, _arg_1, _arg_2_t, _arg_2)                     \
   int castle_##_id (castle_connection *conn,                                                      \
                     C_TYPE_##_arg_1_t _arg_1, C_TYPE_##_arg_2_t _arg_2);                          \
-
-#define CASTLE_IOCTL_2IN_1OUT(_id, _name, _arg_1_t, _arg_1, _arg_2_t, _arg_2, _ret_1_t, _ret)     \
-  int castle_##_id (castle_connection *conn,                                                      \
-                    C_TYPE_##_arg_1_t _arg_1, C_TYPE_##_arg_2_t _arg_2, C_TYPE_##_ret_1_t * _ret);\
 
 #define CASTLE_IOCTL_3IN_1OUT(_id, _name,                                                         \
                               _arg_1_t, _arg_1, _arg_2_t, _arg_2, _arg_3_t, _arg_3,               \
@@ -472,27 +460,7 @@ int castle_get_chunk       (castle_connection *conn,
   CASTLE_IOCTL_1IN_0OUT(                                                                          \
         vertree_compact,                                                                          \
         CASTLE_CTRL_VERTREE_COMPACT,                                                              \
-        da_id_t, vertree_id)                                                                      \
-  CASTLE_IOCTL_0IN_1OUT(                                                                          \
-        merge_thread_create,                                                                      \
-        CASTLE_CTRL_MERGE_THREAD_CREATE,                                                          \
-        thread_id_t, thread_id)                                                                   \
-  CASTLE_IOCTL_1IN_0OUT(                                                                          \
-        merge_thread_destroy,                                                                     \
-        CASTLE_CTRL_MERGE_THREAD_DESTROY,                                                         \
-        thread_id_t, thread_id)                                                                   \
-  CASTLE_IOCTL_2IN_1OUT(                                                                          \
-        merge_do_work,                                                                            \
-        CASTLE_CTRL_MERGE_DO_WORK,                                                                \
-        merge_id_t, merge_id, work_size_t, work_size, work_id_t, work_id)                         \
-  CASTLE_IOCTL_1IN_0OUT(                                                                          \
-        merge_stop,                                                                               \
-        CASTLE_CTRL_MERGE_STOP,                                                                   \
-        merge_id_t, merge_id)                                                                     \
-  CASTLE_IOCTL_2IN_0OUT(                                                                          \
-        merge_thread_attach,                                                                      \
-        CASTLE_CTRL_MERGE_THREAD_ATTACH,                                                          \
-        merge_id_t, merge_id, thread_id_t, thread_id)
+        da_id_t, vertree_id)
 
 #define PRIVATE_CASTLE_IOCTLS                                                                     \
   CASTLE_IOCTL_3IN_1OUT(                                                                          \
@@ -518,14 +486,10 @@ PRIVATE_CASTLE_IOCTLS
 
 #undef CASTLE_IOCTL_0IN_0OUT
 #undef CASTLE_IOCTL_1IN_0OUT
-#undef CASTLE_IOCTL_0IN_1OUT
 #undef CASTLE_IOCTL_1IN_1OUT
 #undef CASTLE_IOCTL_2IN_0OUT
-#undef CASTLE_IOCTL_2IN_1OUT
 #undef CASTLE_IOCTL_3IN_1OUT
 
-int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge_cfg,
-                       c_merge_id_t *merge_id);
 uint32_t castle_device_to_devno(const char *filename);
 const char *castle_devno_to_device(uint32_t devno);
 

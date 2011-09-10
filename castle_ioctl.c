@@ -33,37 +33,6 @@ int castle_protocol_version(struct castle_front_connection *conn) {
     return ctl.protocol_version.version;
 }
 
-int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge_cfg,
-                       c_merge_id_t *merge_id)
-{
-    struct castle_control_ioctl ctl;
-    int ret;
-    ctl.cmd = CASTLE_CTRL_MERGE_START;
-    ctl.merge_start.merge_cfg = merge_cfg;
-
-    ret = ioctl(conn->fd, CASTLE_CTRL_MERGE_START_IOCTL, &ctl);
-    if (__builtin_expect(conn->debug_log != NULL, 0))
-    {
-        unsigned int i;
-
-        fprintf(conn->debug_log, "merge_start(nr_arrays = %u, arrays = ",
-                                  merge_cfg.nr_arrays);
-        for (i=0; i<merge_cfg.nr_arrays; i++)
-            fprintf(conn->debug_log, "[0x%x]", merge_cfg.arrays[i]);
-
-        fprintf(conn->debug_log, ", metadata_ext_type = %u, met_ext_type = %u\n",
-                                  merge_cfg.metadata_ext_type,
-                                  merge_cfg.med_ext_type);
-        fflush(conn->debug_log);
-    }
-
-    if (ret)    return ret;
-
-    *merge_id = ctl.merge_start.merge_id;
-
-    return ctl.merge_start.ret;
-}
-
 #define C_PRINTF_uint32 "%u"
 #define C_PRINTF_uint64 "%lu"
 #define C_PRINTF_slave_uuid "%u"
@@ -75,10 +44,6 @@ int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge
 #define C_PRINTF_int "%d"
 #define C_PRINTF_int32 "%d"
 #define C_PRINTF_da_id_t "%d"
-#define C_PRINTF_merge_id_t "%d"
-#define C_PRINTF_thread_id_t "%d"
-#define C_PRINTF_work_id_t "%d"
-#define C_PRINTF_work_size_t "%lu"
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
 int castle_##_id (struct castle_front_connection *conn)                                           \
@@ -119,28 +84,6 @@ int castle_##_id (struct castle_front_connection *conn,                         
                                                                                                   \
     return ctl._id.ret;                                                                           \
 }
-
-#define CASTLE_IOCTL_0IN_1OUT(_id, _name, _ret_1_t, _ret)                                         \
-int castle_##_id (struct castle_front_connection *conn,                                           \
-    C_TYPE_##_ret_1_t * _ret##_out)                                                               \
-{                                                                                                 \
-    struct castle_control_ioctl ctl;                                                              \
-    int ret;                                                                                      \
-    ctl.cmd = _name;                                                                              \
-                                                                                                  \
-    ret = ioctl(conn->fd, _name##_IOCTL, &ctl);                                                   \
-    if (__builtin_expect(conn->debug_log != NULL, 0)) {                                           \
-      fprintf(conn->debug_log, #_id "(" #_ret " = " C_PRINTF_##_ret_1_t ") = %d\n",               \
-                            ctl._id.ret, ret);                                                    \
-      fflush(conn->debug_log);                                                                    \
-    }                                                                                             \
-    if (ret)                                                                                      \
-        return errno;                                                                             \
-                                                                                                  \
-    * _ret##_out = ctl._id._ret;                                                                  \
-                                                                                                  \
-    return ctl._id.ret;                                                                           \
-}                                                                                                 \
 
 #define CASTLE_IOCTL_1IN_1OUT(_id, _name, _arg_1_t, _arg_1, _ret_1_t, _ret)                       \
 int castle_##_id (struct castle_front_connection *conn,                                           \
@@ -186,34 +129,6 @@ int castle_##_id (struct castle_front_connection *conn,                         
     }                                                                                             \
     if (ret)                                                                                      \
         return errno;                                                                             \
-                                                                                                  \
-    return ctl._id.ret;                                                                           \
-}
-
-#define CASTLE_IOCTL_2IN_1OUT(_id, _name, _arg_1_t, _arg_1, _arg_2_t, _arg_2,                     \
-                              _ret_1_t, _ret)                                                     \
-int castle_##_id (struct castle_front_connection *conn,                                           \
-    C_TYPE_##_arg_1_t _arg_1, C_TYPE_##_arg_2_t _arg_2, C_TYPE_##_ret_1_t * _ret##_out)           \
-{                                                                                                 \
-    struct castle_control_ioctl ctl;                                                              \
-    int ret;                                                                                      \
-    ctl.cmd = _name;                                                                              \
-    ctl._id._arg_1 = _arg_1;                                                                      \
-    ctl._id._arg_2 = _arg_2;                                                                      \
-                                                                                                  \
-    ret = ioctl(conn->fd, _name##_IOCTL, &ctl);                                                   \
-    if (__builtin_expect(conn->debug_log != NULL, 0)) {                                           \
-      fprintf(conn->debug_log,                                                                    \
-              #_id "(" #_arg_1 " = " C_PRINTF_##_arg_1_t                                          \
-                  ", " #_arg_2 " = " C_PRINTF_##_arg_2_t                                          \
-                  ", " #_ret " = " C_PRINTF_##_ret_1_t ") = %d\n",                                \
-              _arg_1, _arg_2, ctl._id.ret, ret);                                                  \
-      fflush(conn->debug_log);                                                                    \
-    }                                                                                             \
-    if (ret)                                                                                      \
-        return errno;                                                                             \
-                                                                                                  \
-    * _ret##_out = ctl._id._ret;                                                                  \
                                                                                                   \
     return ctl._id.ret;                                                                           \
 }
