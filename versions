@@ -81,6 +81,16 @@ CASTLE_1 {
         
         /* Collection utils */
         castle_collection_find;
+
+        /* Golden Nugget */
+        castle_merge_thread_create;
+        castle_merge_thread_destroy;
+        castle_merge_start;
+        castle_merge_do_work;
+        castle_merge_stop;
+        castle_merge_thread_attach;
+
+
         
   local: *;
 };
