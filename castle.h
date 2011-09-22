@@ -30,7 +30,7 @@ struct s_castle_buffer
 {
     /* buf must be first member for CASTLE_BUF_GET macro */
     char* buf;
-    size_t buflen;
+    const size_t buflen;
 };
 
 /* Type names are all over the place - create a consistent set of typedefs for the public API */

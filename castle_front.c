@@ -203,7 +203,10 @@ int castle_shared_buffer_allocate(castle_connection *conn,
         return rc;
     }
 
-    buffer->buflen = size;
+    // discard const qualifier
+    size_t* pbuflen = (size_t*)&buffer->buflen;
+    *pbuflen = size;
+
     *buffer_out = buffer;
     return 0;
 }
