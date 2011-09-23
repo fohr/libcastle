@@ -492,7 +492,16 @@ int castle_get_chunk       (castle_connection *conn,
   CASTLE_IOCTL_2IN_0OUT(                                                                          \
         merge_thread_attach,                                                                      \
         CASTLE_CTRL_MERGE_THREAD_ATTACH,                                                          \
-        merge_id_t, merge_id, thread_id_t, thread_id)
+        merge_id_t, merge_id, thread_id_t, thread_id)                                             \
+  CASTLE_IOCTL_2IN_0OUT(                                                                          \
+        insert_rate_set,                                                                          \
+        CASTLE_CTRL_INSERT_RATE_SET,                                                              \
+        da_id_t, vertree_id, uint32, insert_rate)                                                 \
+  CASTLE_IOCTL_2IN_0OUT(                                                                          \
+        read_rate_set,                                                                            \
+        CASTLE_CTRL_READ_RATE_SET,                                                                \
+        da_id_t, vertree_id, uint32, read_rate)
+
 
 #define PRIVATE_CASTLE_IOCTLS                                                                     \
   CASTLE_IOCTL_3IN_1OUT(                                                                          \

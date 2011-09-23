@@ -89,6 +89,8 @@ CASTLE_1 {
         castle_merge_do_work;
         castle_merge_stop;
         castle_merge_thread_attach;
+        castle_insert_rate_set;
+        castle_read_rate_set;
 
 
         
