@@ -103,6 +103,18 @@ ONLY_INLINE void castle_replace_prepare(castle_request *req, castle_collection c
   req->replace.value_len = value_len;
 }
 
+extern void castle_timestamped_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, castle_user_timestamp_t user_timestamp, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_timestamped_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, castle_user_timestamp_t user_timestamp, uint8_t flags) {
+  req->tag = CASTLE_RING_TIMESTAMPED_REPLACE;
+  req->flags = flags;
+  req->timestamped_replace.collection_id = collection;
+  req->timestamped_replace.key_ptr = key;
+  req->timestamped_replace.key_len = key_len;
+  req->timestamped_replace.value_ptr = value;
+  req->timestamped_replace.value_len = value_len;
+  req->timestamped_replace.user_timestamp = user_timestamp;
+}
+
 extern void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) __attribute__((always_inline));
 ONLY_INLINE void castle_counter_set_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *value, uint32_t value_len, uint8_t flags) {
   req->tag = CASTLE_RING_COUNTER_REPLACE;
@@ -134,6 +146,16 @@ ONLY_INLINE void castle_remove_prepare(castle_request *req, castle_collection co
   req->replace.collection_id = collection;
   req->replace.key_ptr = key;
   req->replace.key_len = key_len;
+}
+
+extern void castle_timestamped_remove_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, castle_user_timestamp_t user_timestamp, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_timestamped_remove_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, castle_user_timestamp_t user_timestamp, uint8_t flags) {
+  req->tag = CASTLE_RING_TIMESTAMPED_REMOVE;
+  req->flags = flags;
+  req->timestamped_replace.collection_id = collection;
+  req->timestamped_replace.key_ptr = key;
+  req->timestamped_replace.key_len = key_len;
+  req->timestamped_replace.user_timestamp = user_timestamp;
 }
 
 extern void castle_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *buffer, uint32_t buffer_len, uint8_t flags) __attribute__((always_inline));
