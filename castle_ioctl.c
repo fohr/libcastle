@@ -51,9 +51,12 @@ int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge
         for (i=0; i<merge_cfg.nr_arrays; i++)
             fprintf(conn->debug_log, "[0x%x]", merge_cfg.arrays[i]);
 
+        for (i=0; i<merge_cfg.nr_data_exts; i++)
+            fprintf(conn->debug_log, "[0x%lx]", merge_cfg.data_exts[i]);
+
         fprintf(conn->debug_log, ", metadata_ext_type = %u, met_ext_type = %u\n",
                                   merge_cfg.metadata_ext_type,
-                                  merge_cfg.med_ext_type);
+                                  merge_cfg.data_ext_type);
         fflush(conn->debug_log);
     }
 
