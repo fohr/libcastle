@@ -158,8 +158,22 @@ ONLY_INLINE void castle_timestamped_remove_prepare(castle_request *req, castle_c
   req->timestamped_replace.user_timestamp = user_timestamp;
 }
 
-extern void castle_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *buffer, uint32_t buffer_len, uint8_t flags) __attribute__((always_inline));
-ONLY_INLINE void castle_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, char *buffer, uint32_t buffer_len, uint8_t flags) {
+/* CASTLE_BACK_GET */
+extern void castle_get_prepare(castle_request *req,
+                               castle_collection collection,
+                               castle_key *key,
+                               uint32_t key_len,
+                               char *buffer,
+                               uint32_t buffer_len,
+                               uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_get_prepare(castle_request *req,
+                                    castle_collection collection,
+                                    castle_key *key,
+                                    uint32_t key_len,
+                                    char *buffer,
+                                    uint32_t buffer_len,
+                                    uint8_t flags)
+{
   req->tag = CASTLE_RING_GET;
   req->flags = flags;
   req->get.collection_id = collection;
