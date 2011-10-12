@@ -78,7 +78,7 @@ CASTLE_1 {
         castle_shared_pool_destroy;
         castle_shared_pool_lease;
         castle_shared_pool_release;
-        
+
         /* Collection utils */
         castle_collection_find;
 
@@ -91,8 +91,9 @@ CASTLE_1 {
         castle_merge_thread_attach;
         castle_insert_rate_set;
         castle_read_rate_set;
+        castle_ctrl_prog_register;
+        castle_ctrl_prog_deregister;
+        castle_ctrl_prog_heartbeat;
 
-
-        
   local: *;
 };

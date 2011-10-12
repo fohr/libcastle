@@ -67,6 +67,7 @@ int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge
     return ctl.merge_start.ret;
 }
 
+#define C_PRINTF_uint8 "%u"
 #define C_PRINTF_uint32 "%u"
 #define C_PRINTF_uint64 "%lu"
 #define C_PRINTF_slave_uuid "%u"
@@ -82,6 +83,7 @@ int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge
 #define C_PRINTF_thread_id_t "%d"
 #define C_PRINTF_work_id_t "%d"
 #define C_PRINTF_work_size_t "%lu"
+#define C_PRINTF_pid "%u"
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
 int castle_##_id (struct castle_front_connection *conn)                                           \

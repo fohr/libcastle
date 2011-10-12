@@ -391,6 +391,7 @@ int castle_get_chunk       (castle_connection *conn,
 
 /* Control functions - ioctls */
 
+#define C_TYPE_uint8 uint8_t
 #define C_TYPE_uint32 uint32_t
 #define C_TYPE_uint64 uint64_t
 #define C_TYPE_slave_uuid castle_slave_uuid
@@ -406,6 +407,7 @@ int castle_get_chunk       (castle_connection *conn,
 #define C_TYPE_thread_id_t c_thread_id_t
 #define C_TYPE_work_id_t c_work_id_t
 #define C_TYPE_work_size_t c_work_size_t
+#define C_TYPE_pid pid_t
 
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
@@ -536,7 +538,18 @@ int castle_get_chunk       (castle_connection *conn,
   CASTLE_IOCTL_2IN_0OUT(                                                                          \
         read_rate_set,                                                                            \
         CASTLE_CTRL_READ_RATE_SET,                                                                \
-        da_id_t, vertree_id, uint32, read_rate)
+        da_id_t, vertree_id, uint32, read_rate)                                                   \
+  CASTLE_IOCTL_0IN_0OUT(                                                                          \
+        ctrl_prog_register,                                                                       \
+        CASTLE_CTRL_PROG_REGISTER)                                                                \
+  CASTLE_IOCTL_2IN_0OUT(                                                                          \
+        ctrl_prog_deregister,                                                                     \
+        CASTLE_CTRL_PROG_DEREGISTER,                                                              \
+        pid, pid, uint8, shutdown)                                                                \
+  CASTLE_IOCTL_0IN_0OUT(                                                                          \
+        ctrl_prog_heartbeat,                                                                      \
+        CASTLE_CTRL_PROG_HEARTBEAT)                                                               \
+
 
 
 #define PRIVATE_CASTLE_IOCTLS                                                                     \
