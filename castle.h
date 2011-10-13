@@ -542,10 +542,10 @@ int castle_get_chunk       (castle_connection *conn,
   CASTLE_IOCTL_0IN_0OUT(                                                                          \
         ctrl_prog_register,                                                                       \
         CASTLE_CTRL_PROG_REGISTER)                                                                \
-  CASTLE_IOCTL_2IN_0OUT(                                                                          \
+  CASTLE_IOCTL_1IN_1OUT(                                                                          \
         ctrl_prog_deregister,                                                                     \
         CASTLE_CTRL_PROG_DEREGISTER,                                                              \
-        pid, pid, uint8, shutdown)                                                                \
+        uint8, shutdown, pid, pid)                                                                \
   CASTLE_IOCTL_0IN_0OUT(                                                                          \
         ctrl_prog_heartbeat,                                                                      \
         CASTLE_CTRL_PROG_HEARTBEAT)                                                               \
