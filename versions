@@ -95,5 +95,6 @@ CASTLE_1 {
         castle_ctrl_prog_deregister;
         castle_ctrl_prog_heartbeat;
 
+        castle_error_code_to_str;
   local: *;
 };

@@ -605,4 +605,8 @@ int castle_shared_pool_release(castle_shared_pool* pool, castle_buffer* buffer, 
 /* Collection utils */
 int castle_collection_find(const char* name, castle_collection* collection_out);
 
+extern const char *castle_error_strings[];
+
+const char *castle_error_code_to_str(int);
+
 #endif /* __CASTLE_FRONT_H__ */

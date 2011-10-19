@@ -17,6 +17,22 @@
 
 #include "castle_private.h"
 
+/* Define string array for userspace error-codes. */
+#undef CASTLE_ERROR_CODE
+#define CASTLE_ERROR_CODE(err_no, err_code, err_str)  err_str,
+const char *castle_error_strings[] =
+{
+    CASTLE_ERRORS
+};
+
+const char * castle_error_code_to_str(int error_code)
+{
+    if ((error_code < 0) || (error_code >= CASTLE_ERROR_MAX))
+        error_code = CASTLE_ERROR_MAX;
+
+    return castle_error_strings[error_code];
+}
+
 int castle_protocol_version(struct castle_front_connection *conn) {
     struct castle_control_ioctl ctl;
     int ret;
