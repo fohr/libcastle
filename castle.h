@@ -55,6 +55,7 @@ struct castle_blocking_call
     int                      err;
     uint64_t                 length;
     castle_token             token;
+    castle_user_timestamp_t  user_timestamp;   /** See comments in castle_response_t. */
 };
 
 int castle_shared_buffer_create   (castle_connection *conn,
@@ -253,6 +254,17 @@ ONLY_INLINE void castle_big_put_prepare(castle_request *req, castle_collection c
   req->big_put.key_ptr = key;
   req->big_put.key_len = key_len;
   req->big_put.value_len = value_len;
+}
+
+extern void castle_timestamped_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len, castle_user_timestamp_t user_timestamp, uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_timestamped_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len, castle_user_timestamp_t user_timestamp, uint8_t flags) {
+  req->tag = CASTLE_RING_TIMESTAMPED_BIG_PUT;
+  req->flags = flags;
+  req->timestamped_big_put.collection_id = collection;
+  req->timestamped_big_put.key_ptr = key;
+  req->timestamped_big_put.key_len = key_len;
+  req->timestamped_big_put.value_len = value_len;
+  req->timestamped_big_put.user_timestamp = user_timestamp;
 }
 
 extern void castle_put_chunk_prepare(castle_request *req, castle_token token, char *buffer, uint32_t buffer_len, uint8_t flags) __attribute__((always_inline));
