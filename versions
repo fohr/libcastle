@@ -58,6 +58,7 @@ CASTLE_1 {
         castle_slave_scan;
         castle_thread_priority;
         castle_create;
+        castle_create_with_opts;
         castle_detach;
         castle_detach_dev;
         castle_init;
@@ -94,6 +95,8 @@ CASTLE_1 {
         castle_ctrl_prog_register;
         castle_ctrl_prog_deregister;
         castle_ctrl_prog_heartbeat;
+
+        castle_vertree_tdp_set;
 
         castle_error_code_to_str;
   local: *;

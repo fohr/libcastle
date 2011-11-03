@@ -100,6 +100,7 @@ int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge
 #define C_PRINTF_work_id_t "%d"
 #define C_PRINTF_work_size_t "%lu"
 #define C_PRINTF_pid "%u"
+#define C_PRINTF_c_da_opts_t "%lu"
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
 int castle_##_id (struct castle_front_connection *conn)                                           \

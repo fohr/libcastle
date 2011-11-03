@@ -420,6 +420,7 @@ int castle_get_chunk       (castle_connection *conn,
 #define C_TYPE_work_id_t c_work_id_t
 #define C_TYPE_work_size_t c_work_size_t
 #define C_TYPE_pid pid_t
+#define C_TYPE_c_da_opts_t c_da_opts_t
 
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
@@ -488,6 +489,10 @@ int castle_get_chunk       (castle_connection *conn,
         create,                                                                                   \
         CASTLE_CTRL_CREATE,                                                                       \
         uint64, size, version, id)                                                                \
+  CASTLE_IOCTL_2IN_1OUT(                                                                          \
+        create_with_opts,                                                                         \
+        CASTLE_CTRL_CREATE_WITH_OPTS,                                                             \
+        uint64, size, c_da_opts_t, opts, version, id)                                             \
   CASTLE_IOCTL_1IN_1OUT(                                                                          \
         clone,                                                                                    \
         CASTLE_CTRL_CLONE,                                                                        \
@@ -561,6 +566,10 @@ int castle_get_chunk       (castle_connection *conn,
   CASTLE_IOCTL_0IN_0OUT(                                                                          \
         ctrl_prog_heartbeat,                                                                      \
         CASTLE_CTRL_PROG_HEARTBEAT)                                                               \
+  CASTLE_IOCTL_2IN_0OUT(                                                                          \
+        vertree_tdp_set,                                                                          \
+        CASTLE_CTRL_VERTREE_TDP_SET,                                                              \
+        da_id_t, vertree_id, uint64, seconds)                                                     \
 
 
 
