@@ -1,10 +1,14 @@
+#ifndef __CASTLE_FRONT_H__
+#define __CASTLE_FRONT_H__
+
 #include <inttypes.h>
 #include <stdio.h>
 
 #include "castle_public.h"
 
-#ifndef __CASTLE_FRONT_H__
-#define __CASTLE_FRONT_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define CASTLE_NODE   "/dev/castle-fs/control"
 
@@ -629,5 +633,9 @@ int castle_collection_find(const char* name, castle_collection* collection_out);
 extern const char *castle_error_strings[];
 
 const char *castle_error_code_to_str(int);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __CASTLE_FRONT_H__ */
