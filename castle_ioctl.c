@@ -65,7 +65,7 @@ int castle_merge_start(struct castle_front_connection *conn, c_merge_cfg_t merge
         fprintf(conn->debug_log, "merge_start(nr_arrays = %u, arrays = ",
                                   merge_cfg.nr_arrays);
         for (i=0; i<merge_cfg.nr_arrays; i++)
-            fprintf(conn->debug_log, "[0x%x]", merge_cfg.arrays[i]);
+            fprintf(conn->debug_log, "[0x%lx]", merge_cfg.arrays[i]);
 
         for (i=0; i<merge_cfg.nr_data_exts; i++)
             fprintf(conn->debug_log, "[0x%lx]", merge_cfg.data_exts[i]);
