@@ -1013,7 +1013,7 @@ enum castle_error_codes
 #define CASTLE_SLAVE_REMAPPED_BIT        3 /* Slave has been remapped */
 #define CASTLE_SLAVE_CLAIMING_BIT        4 /* Slave is not yet available for use (in castle_claim) */
 #define CASTLE_SLAVE_BDCLAIMED_BIT       5 /* Slave has been bd_claim'ed. */
-#define CASTLE_SLAVE_ORDERED_SUPP_BIT    6 /* Slave has been bd_claim'ed. */
+#define CASTLE_SLAVE_ORDERED_SUPP_BIT    6 /* Slave supports ordered writes. */
 
 #ifdef __cplusplus
 }
