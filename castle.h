@@ -12,7 +12,9 @@ extern "C" {
 
 #define CASTLE_NODE   "/dev/castle-fs/control"
 
-#ifdef __GNUC_STDC_INLINE__
+#ifdef SWIG
+#define ONLY_INLINE
+#elif defined __GNUC_STDC_INLINE__
 #define ONLY_INLINE extern __inline__ __attribute__((__gnu_inline__))
 #else
 #define ONLY_INLINE extern __inline__
@@ -630,7 +632,7 @@ int castle_shared_pool_release(castle_shared_pool* pool, castle_buffer* buffer, 
 /* Collection utils */
 int castle_collection_find(const char* name, castle_collection* collection_out);
 
-extern const char *castle_error_strings[];
+extern const char *castle_error_strings[CASTLE_ERROR_MAX_NUM+1];
 
 const char *castle_error_code_to_str(int);
 
