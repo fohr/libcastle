@@ -2,6 +2,7 @@
 import libcastle
 import errno
 import logging, sys
+import struct
 
 pycastle_log = logging.getLogger('test')
 ch = logging.StreamHandler()
@@ -151,7 +152,7 @@ def castle_get_blocking(castle_key, castle_key_len, conn, coll, val_buf, val_len
     pycastle_log.debug("returning val_len = "+str(val_len))
     return val_len
 
-def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf, val_len):
+def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf, val_len, counter=None):
     pycastle_log.debug("entering ")
     req_p = libcastle.malloc_castle_request()
     if isinstance(coll, int):
@@ -160,13 +161,30 @@ def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf, val
         coll_id = coll.value()
 
     pycastle_log.debug("preparing request ")
-    libcastle.c_replace_prepare(req_p,
+    if isinstance(counter, CastleCounterAdd):
+        libcastle.c_add_prepare(req_p,
                                 coll_id,
                                 castle_key,
                                 castle_key_len,
                                 val_buf,
                                 val_len,
                                 libcastle.CASTLE_RING_FLAG_NONE)
+    elif isinstance(counter, CastleCounterSet):
+        libcastle.c_set_prepare(req_p,
+                                coll_id,
+                                castle_key,
+                                castle_key_len,
+                                val_buf,
+                                val_len,
+                                libcastle.CASTLE_RING_FLAG_NONE)
+    else:
+        libcastle.c_replace_prepare(req_p,
+                                    coll_id,
+                                    castle_key,
+                                    castle_key_len,
+                                    val_buf,
+                                    val_len,
+                                    libcastle.CASTLE_RING_FLAG_NONE)
 
     call_p = libcastle.malloc_castle_blocking_call_t()
     libcastle.castle_request_do_blocking(conn, req_p, call_p)
@@ -313,16 +331,23 @@ class Castle:
         #prepare key
         ck, ck_size = make_key(key, self.key_buf, self.key_buf_size)
 
+        counter = None
+
         #prepare value
-        if isinstance(val, str):
-            _val = str(val)
-            libcastle.memmove(self.val_buf, _val)
+        if isinstance(val, CastleCounter):
+            vstr = struct.pack('q', int(val.value))
+            libcastle.memmove(self.val_buf, vstr)
+            val_len = 8
+            counter = val
+        elif isinstance(val, str):
+            vstr = str(val)
+            libcastle.memmove(self.val_buf, vstr)
             val_len = len(_val)
         else:
             raise Exception("Currently only str values supported")
 
         #do it
-        castle_replace_blocking(ck, ck_size, self.conn, self.current_coll, self.val_buf, val_len)
+        castle_replace_blocking(ck, ck_size, self.conn, self.current_coll, self.val_buf, val_len, counter)
 
 
     # tombstone
@@ -356,5 +381,25 @@ class Castle:
         self.current_stateful_op_count -= 1
         pycastle_log.debug(str(self)+" end, current_stateful_op_count now "+str(self.current_stateful_op_count))
         raise StopIteration
+
+
+
+class CastleCounter:
+    value = None
+    def __init__(self, val=None):
+        if isinstance(val, CastleCounter):
+            self.value=val.value
+        elif isinstance(val, int):
+            self.value=val
+        elif isinstance(val, str):
+            self.value=struct.unpack('q', val)
+        else:
+            raise Exception("Dunno what to do with val of type "+str(type(val)))
+
+class CastleCounterSet(CastleCounter):
+    pass
+
+class CastleCounterAdd(CastleCounter):
+    pass
 
 

@@ -1,0 +1,19 @@
+#!/usr/bin/python2.6
+import castle
+import sys
+import logging
+
+def main(argv):
+    #castle.pycastle_log.setLevel(logging.INFO)
+    #castle.pycastle_log.setLevel(logging.DEBUG)
+
+    foo = castle.Castle()
+    foo.new_collection_attach("bar")
+    for i in range(1, 6):
+        c = pow(2, i)
+        foo["bar"]=castle.CastleCounterAdd(c)
+
+    print "got "+str(castle.CastleCounter(foo["bar"]).value)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

@@ -42,6 +42,9 @@ typedef struct castle_blocking_call castle_blocking_call_t;
 
 %include cdata.i
 
+%include carrays.i
+%array_functions(long long, longlongArray);
+
 %inline %{
 /* start of swig inline from libcastle.i */
 /* helper function to establish a castle connection in a more scripty way */
@@ -188,7 +191,7 @@ size_t finalize_key(key_builder_t *builder)
         printf("(0x%x)", ((char *)(builder->key_buf))[i]);
     printf("\n");
     */
-    libcastle_debug("%s""castle_build_key_len with builder %p produced key_len %u\n",
+    libcastle_debug("%s::castle_build_key_len with builder %p produced key_len %u\n",
         __FUNCTION__, builder, total_size);
 
     assert(total_size <= builder->buffer_capacity);
@@ -198,11 +201,23 @@ size_t finalize_key(key_builder_t *builder)
 /************************************** request helpers **************************************/
 void c_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
 {
+    libcastle_debug("%s::\n", __FUNCTION__);
     castle_get_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
 }
 void c_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
 {
+    libcastle_debug("%s::\n", __FUNCTION__);
     castle_replace_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
+}
+void c_add_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
+{
+    libcastle_debug("%s::\n", __FUNCTION__);
+    castle_counter_add_replace_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
+}
+void c_set_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
+{
+    libcastle_debug("%s::\n", __FUNCTION__);
+    castle_counter_set_replace_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
 }
 /************************************** debugging **************************************/
 void hello_world()
