@@ -342,7 +342,7 @@ class Castle:
         elif isinstance(val, str):
             vstr = str(val)
             libcastle.memmove(self.val_buf, vstr)
-            val_len = len(_val)
+            val_len = len(vstr)
         else:
             raise Exception("Currently only str values supported")
 
@@ -392,7 +392,7 @@ class CastleCounter:
         elif isinstance(val, int):
             self.value=val
         elif isinstance(val, str):
-            self.value=struct.unpack('q', val)
+            self.value=int(struct.unpack('q', val)[0])
         else:
             raise Exception("Dunno what to do with val of type "+str(type(val)))
 
