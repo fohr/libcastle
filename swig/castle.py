@@ -132,13 +132,7 @@ def castle_get_blocking(castle_key, castle_key_len, conn, coll, val_buf, val_len
         flag = libcastle.CASTLE_RING_FLAG_NONE
 
     pycastle_log.debug("preparing request ")
-    libcastle.c_get_prepare(req_p,
-                            coll_id,
-                            castle_key,
-                            castle_key_len,
-                            val_buf,
-                            val_len,
-                            flag)
+    libcastle.c_get_prep(req_p, coll_id, castle_key, castle_key_len, val_buf, val_len, flag)
 
     call_p = libcastle.malloc_castle_blocking_call_t()
     ret = libcastle.castle_request_do_blocking(conn, req_p, call_p)
@@ -152,8 +146,15 @@ def castle_get_blocking(castle_key, castle_key_len, conn, coll, val_buf, val_len
     pycastle_log.debug("returning val_len = "+str(val_len))
     return val_len
 
-def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf, val_len, counter=None):
+def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf=None, val_len=None, counter=None):
+    """
+    Do a replace (a.k.a. insert); block until successful. If no val_buf provided, we will insert
+    tombstone (i.e. rm key). If inserting a counter, pass a counter type to argument 'counter',
+    but note that the value must still be prepared in val_buf. This is not nice, if you are reading
+    this, you should hassle someone to improve it.
+    """
     pycastle_log.debug("entering ")
+
     req_p = libcastle.malloc_castle_request()
     if isinstance(coll, int):
         coll_id = coll
@@ -161,30 +162,18 @@ def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf, val
         coll_id = coll.value()
 
     pycastle_log.debug("preparing request ")
-    if isinstance(counter, CastleCounterAdd):
-        libcastle.c_add_prepare(req_p,
-                                coll_id,
-                                castle_key,
-                                castle_key_len,
-                                val_buf,
-                                val_len,
-                                libcastle.CASTLE_RING_FLAG_NONE)
-    elif isinstance(counter, CastleCounterSet):
-        libcastle.c_set_prepare(req_p,
-                                coll_id,
-                                castle_key,
-                                castle_key_len,
-                                val_buf,
-                                val_len,
-                                libcastle.CASTLE_RING_FLAG_NONE)
-    else:
-        libcastle.c_replace_prepare(req_p,
-                                    coll_id,
-                                    castle_key,
-                                    castle_key_len,
-                                    val_buf,
-                                    val_len,
-                                    libcastle.CASTLE_RING_FLAG_NONE)
+
+    if not val_buf: #must be tombstone
+        libcastle.c_rm_prep(req_p, coll_id, castle_key, castle_key_len, libcastle.CASTLE_RING_FLAG_NONE)
+    else: #could be counter_{ADD|SET} or regular insert
+        if isinstance(counter, CastleCounterAdd):
+            libcastle.c_add_prep(req_p, coll_id, castle_key, castle_key_len, val_buf, val_len, libcastle.CASTLE_RING_FLAG_NONE)
+        elif isinstance(counter, CastleCounterSet):
+            libcastle.c_set_prep(req_p, coll_id, castle_key, castle_key_len, val_buf, val_len, libcastle.CASTLE_RING_FLAG_NONE)
+        else:
+            if counter:
+                raise Exception("unexpected counter parameter of type "+str(type(counter)))
+            libcastle.c_replace_prep(req_p, coll_id, castle_key, castle_key_len, val_buf, val_len, libcastle.CASTLE_RING_FLAG_NONE)
 
     call_p = libcastle.malloc_castle_blocking_call_t()
     libcastle.castle_request_do_blocking(conn, req_p, call_p)
@@ -353,6 +342,10 @@ class Castle:
     # tombstone
     def __delitem__(self, key):
         pycastle_log.info("Inserting tombstone on key "+str(key))
+        #prepare key
+        ck, ck_size = make_key(key, self.key_buf, self.key_buf_size)
+        #do it
+        castle_replace_blocking(ck, ck_size, self.conn, self.current_coll)
 
     #todo: actually implement this!
     def range_query(self, start_key, end_key):

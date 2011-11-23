@@ -199,26 +199,32 @@ size_t finalize_key(key_builder_t *builder)
     return total_size;
 }
 /************************************** request helpers **************************************/
-void c_get_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
+void c_get_prep(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
 {
     libcastle_debug("%s::\n", __FUNCTION__);
     castle_get_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
 }
-void c_replace_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
+void c_replace_prep(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
 {
     libcastle_debug("%s::\n", __FUNCTION__);
     castle_replace_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
 }
-void c_add_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
+void c_add_prep(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
 {
     libcastle_debug("%s::\n", __FUNCTION__);
     castle_counter_add_replace_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
 }
-void c_set_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
+void c_set_prep(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, void *value, uint32_t value_len, uint8_t flags)
 {
     libcastle_debug("%s::\n", __FUNCTION__);
     castle_counter_set_replace_prepare(req, collection, key, key_len, (char *)value, value_len, flags);
 }
+void c_rm_prep(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint8_t flags)
+{
+    libcastle_debug("%s::\n", __FUNCTION__);
+    castle_remove_prepare(req, collection, key, key_len, flags);
+}
+
 /************************************** debugging **************************************/
 void hello_world()
 {

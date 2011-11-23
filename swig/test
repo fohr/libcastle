@@ -24,8 +24,9 @@ def main(argv):
     if expect_no_val:
         raise Exception('baby got back (expected nothing, got something)')
 
-    print foo["foo", "bar", "baz"]
-
+    result=foo["foo", "bar", "baz"]
+    print result
+    assert result == "Hello World", "wtf?! result = "+str(result)
 
     #save the current version number
     i = foo.current_version
@@ -41,14 +42,22 @@ def main(argv):
         assert expected_val == got_val, "expected "+str(expected_val)+", got "+str(got_val)
 
     foo["foo", "bar", "baz"] = "Hello World 2"
-    print foo["foo", "bar", "baz"]
+    result=foo["foo", "bar", "baz"]
+    print result
+    assert result == "Hello World 2", "wtf?! result = "+str(result)
+
+    del foo["foo", "bar", "baz"]
+    result=foo["foo", "bar", "baz"]
+    assert not result, "wtf?! result = "+str(result)
 
     ##detach
     foo.collection_detach()
 
     #attach to version i
     foo.collection_attach(i, "baz")
-    print foo["foo", "bar", "baz"]
+    result = foo["foo", "bar", "baz"]
+    print result
+    assert result == "Hello World", "wtf?!"
 
     #this throws an exception because we can't handle non-string keys yet
     try:
