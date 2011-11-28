@@ -25,6 +25,7 @@ def gen_key_tuple(max_key, dims):
 def insert_perf_test():
     #castle.pycastle_log.setLevel(logging.INFO)
     #castle.pycastle_log.setLevel(logging.DEBUG)
+    castle.disable_logging()
 
     #this value is inserted (as a string) for every key
     insert_val = "12345678"

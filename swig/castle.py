@@ -11,6 +11,27 @@ formatter = logging.Formatter('[%(levelname)s] %(funcName)s: %(message)s')
 ch.setFormatter(formatter)
 pycastle_log.addHandler(ch)
 
+###################################################################################################
+#for performance tests and such we may want to totally disable the logging mechanism, and AFAICT
+#there isn't anything much more elegant than this that actually disables everything from the
+#perspective of performance.
+def dummy_debug_log(*ignore):
+    pass
+def dummy_info_log(*ignore):
+    pass
+def disable_logging():
+    """
+    Completely disable client-side castle.py module logging. You may want to do this for performance
+    testing and such (impact of the logging module is non-trivial, given how frequently it is called
+    by this module). There is no supported way to re-enable logging after disabling it; the only
+    way is to reload the castle.py module.
+    module.
+    """
+    print "Permanently disabled logging; to re-enable logging, module must be reloaded"
+    pycastle_log.debug=dummy_debug_log
+    pycastle_log.info=dummy_info_log
+###################################################################################################
+
 def castle_connect():
     conn = libcastle.c_connect()
     if not conn:
