@@ -139,7 +139,7 @@ struct __name##_front_ring {                                            \
     RING_IDX req_prod_pvt;                                              \
     RING_IDX rsp_cons;                                                  \
     unsigned int nr_ents;                                               \
-  unsigned int reserved;                                                \
+    unsigned int reserved;                                              \
     struct __name##_sring *sring;                                       \
 };                                                                      \
                                                                         \

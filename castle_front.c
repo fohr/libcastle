@@ -138,7 +138,8 @@ static void *castle_response_thread(void *data)
             uint64_t delay_usec = (end.tv_sec - last.tv_sec) * 1000000 + (end.tv_usec - last.tv_usec);
             if (delay_usec > 1000000) {
               memcpy(&last, &end, sizeof(last));
-              fprintf(conn->debug_log, "ring free requests %d, reserved %d\n", RING_FREE_REQUESTS(&conn->front_ring), conn->front_ring.reserved);
+              fprintf(conn->debug_log, "ring free requests %d, reserved %d\n",
+                      RING_FREE_REQUESTS(&conn->front_ring), conn->front_ring.reserved);
               fflush(conn->debug_log);
             }
           }
@@ -589,8 +590,10 @@ out0:
 }
 
 void castle_request_send(castle_connection *conn,
-                               castle_request_t *req, castle_callback *callbacks,
-                               void **datas, int reqs_count)
+                         castle_request_t *req,
+                         castle_callback *callbacks,
+                         void **datas,
+                         int reqs_count)
 {
     // TODO check return codes?
     int notify, i=0, call_id;
@@ -624,9 +627,9 @@ void castle_request_send(castle_connection *conn,
       while (ring_full_for(conn, &req[i]))
             pthread_cond_wait(&conn->ring_cond, &conn->ring_mutex);
 
-        /* Another RING_FULL hazard on req_prod_pvt */
+      /* Another RING_FULL hazard on req_prod_pvt */
       while (i < reqs_count && !ring_full_for(conn, &req[i]))
-        {
+      {
             pthread_mutex_lock(&conn->free_mutex);
             assert(!list_empty(&conn->free_callbacks));
             callback = list_entry(conn->free_callbacks.next, struct castle_front_callback, list);

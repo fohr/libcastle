@@ -18,7 +18,7 @@ struct castle_front_callback
     struct list_head    list;
     castle_callback     callback;
     void               *data;
-  castle_interface_token_t token;
+    castle_interface_token_t token;
 };
 
 struct castle_front_connection
@@ -33,7 +33,7 @@ struct castle_front_connection
     struct castle_front_callback *callbacks;
     struct list_head    free_callbacks;
 
-  int outstanding_stateful_requests[CASTLE_STATEFUL_OPS];
+    int outstanding_stateful_requests[CASTLE_STATEFUL_OPS];
 
     pthread_t           response_thread;
     int                 response_thread_exit;
