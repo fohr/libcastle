@@ -134,7 +134,11 @@ struct __name##_sring {                                                 \
     union __name##_sring_entry ring[1]; /* variable-length */           \
 };                                                                      \
                                                                         \
-/* "Front" end's private variables */                                   \
+/* "Front" end's private variables.                                     \
+ *                                                                      \
+ * reserved indicates the number of slots reserved exclusively for      \
+ * stateful requests.                                                   \
+ */                                                                     \
 struct __name##_front_ring {                                            \
     RING_IDX req_prod_pvt;                                              \
     RING_IDX rsp_cons;                                                  \
