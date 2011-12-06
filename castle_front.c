@@ -113,6 +113,7 @@ static void *castle_response_thread(void *data)
             pthread_mutex_unlock(&conn->free_mutex);
 
             if (has_token) {
+              /* This request was send with a token so is part of an ongoing stateful_op. */
               assert(request_id < CASTLE_STATEFUL_OPS);
               assert(conn->outstanding_stateful_requests[request_id] > 0);
               int new = __sync_sub_and_fetch(&conn->outstanding_stateful_requests[request_id], 1);
@@ -652,13 +653,16 @@ void castle_request_send(castle_connection *conn,
             }
 
             if (callback->token) {
+              /* If this request has a token it must be part of an ongoing stateful_op.
+               * As there are a fixed number of stateful_ops we store the number of
+               * outstanding sub-ops in the conn->outstanding_stateful_requests[] array.
+               * If we increment that count here and it was previously 0 (no pending
+               * sub-ops) then we expect to find our reserved slot on the ring. */
               unsigned int x = callback->token % CASTLE_STATEFUL_OPS;
               assert(x < CASTLE_STATEFUL_OPS);
               int old = __sync_fetch_and_add(&conn->outstanding_stateful_requests[x], 1);
-              if (old == 0) {
-                assert(conn->front_ring.reserved > 0);
+              if (old == 0)
                 atomic_dec(&conn->front_ring.reserved);
-              }
             }
 
             /* More req_prod_pvt hazards */
