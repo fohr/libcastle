@@ -729,7 +729,7 @@ typedef struct castle_var_length_btree_key {
  */
 #define CASTLE_RING_PAGES   (32)                                /**< Must be a power of 2.  */
 #define CASTLE_RING_SIZE    (CASTLE_RING_PAGES << PAGE_SHIFT)
-#define CASTLE_STATEFUL_OPS 8                                   /**< Must be < total slots. */
+#define CASTLE_STATEFUL_OPS 512                                 /**< Must be < total slots. */
 
 
 #define CASTLE_IOCTL_POKE_RING 2
