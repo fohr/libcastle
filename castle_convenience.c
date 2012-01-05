@@ -367,16 +367,15 @@ void castle_kvs_free(struct castle_key_value_list *kvs)
 
         if (kvs->key)
             free(kvs->key);
-        if (kvs->val->val)
-            free(kvs->val->val);
         if (kvs->val)
+        {
+            if (kvs->val->val)
+                free(kvs->val->val);
             free(kvs->val);
+        }
         free(kvs);
 
-        if (next > kvs)
-            kvs = next;
-        else
-            kvs = NULL;
+        kvs = next;
     }
 }
 
@@ -428,26 +427,38 @@ static int castle_iter_process_kvs(castle_connection *conn,
         key_len = castle_key_length(curr->key);
         copy = calloc(1, sizeof(*copy));
         if (!copy)
-            goto alloc_fail;
+        {
+            err = -ENOMEM;
+            goto err1;
+        }
         copy->key = malloc(key_len);
         if (!copy->key)
-            goto alloc_fail;
+        {
+            err = -ENOMEM;
+            goto err2;
+        }
 
         /* Fill key. */
         err = castle_key_copy(curr->key, copy->key, key_len);
         if (err)
-            goto err;
+            goto err3;
 
         /* Fill val, do castle_get() if necessary. */
         copy->val = malloc(sizeof(*(copy->val)));
         if (!copy->val)
-            goto alloc_fail;
+        {
+            err = -ENOMEM;
+            goto err3;
+        }
         memcpy(copy->val, curr->val, sizeof(*(copy->val)));
         if (VALUE_INLINE(curr->val->type))
         {
             copy->val->val = malloc(copy->val->length);
             if (!copy->val->val)
-                goto alloc_fail;
+            {
+                err = -ENOMEM;
+                goto err4;
+            }
             memcpy(copy->val->val, curr->val->val, copy->val->length);
         }
         else
@@ -456,7 +467,7 @@ static int castle_iter_process_kvs(castle_connection *conn,
             uint32_t val_len;
             err = castle_get(conn, curr->val->collection_id, curr->key, &val, &val_len);
             if (err)
-                goto err;
+                goto err4;
             copy->val->length = val_len;
             copy->val->val = (uint8_t *)val;
             copy->val->type = CASTLE_VALUE_TYPE_INLINE; /* fake it for consumer */
@@ -478,12 +489,14 @@ out:
     *kvs = head;
     if (tail)
         tail->next = NULL;
+
     return 0;
 
-alloc_fail:
-    err = -ENOMEM;
-err:
-    castle_kvs_free(head);
+err4: free(copy->val);
+err3: free(copy->key);
+err2: free(copy);
+err1: castle_kvs_free(head);
+
     return err;
 }
 
@@ -625,7 +638,10 @@ int castle_getslice(castle_connection *conn,
 
     err = castle_iter_start(conn, collection, start_key, end_key, &token, &curr, PAGE_SIZE, &more);
     if (err)
+    {
+        head = curr; /* for free */
         goto err;
+    }
 
     head = tail = curr; /* start at curr */
 
