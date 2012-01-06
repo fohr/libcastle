@@ -197,7 +197,9 @@ def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf=None
             libcastle.c_replace_prep(req_p, coll_id, castle_key, castle_key_len, val_buf, val_len, libcastle.CASTLE_RING_FLAG_NONE)
 
     call_p = libcastle.malloc_castle_blocking_call_t()
-    libcastle.castle_request_do_blocking(conn, req_p, call_p)
+    ret = libcastle.castle_request_do_blocking(conn, req_p, call_p)
+    if ret != 0:
+        raise Exception("returned "+str(ret))
     libcastle.free_castle_request(req_p)
     libcastle.free_castle_blocking_call_t(call_p)
     pycastle_log.debug("returning ")
