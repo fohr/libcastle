@@ -69,7 +69,7 @@ CASTLE_1 {
         castle_snapshot_dev;
         castle_destroy_vertree;
         castle_vertree_compact;
-	castle_delete_version;
+        castle_delete_version;
 
         castle_device_to_devno;
         castle_devno_to_device;
@@ -99,6 +99,7 @@ CASTLE_1 {
         castle_ctrl_prog_heartbeat;
 
         castle_vertree_tdp_set;
+        castle_state_query;
 
         castle_error_code_to_str;
   local: *;

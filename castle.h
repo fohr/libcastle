@@ -436,6 +436,7 @@ int castle_get_chunk       (castle_connection *conn,
 #define C_TYPE_work_size_t c_work_size_t
 #define C_TYPE_pid pid_t
 #define C_TYPE_c_da_opts_t c_da_opts_t
+#define C_TYPE_c_state_t int
 
 
 #define CASTLE_IOCTL_0IN_0OUT(_id, _name)                                                         \
@@ -585,6 +586,10 @@ int castle_get_chunk       (castle_connection *conn,
         vertree_tdp_set,                                                                          \
         CASTLE_CTRL_VERTREE_TDP_SET,                                                              \
         da_id_t, vertree_id, uint64, seconds)                                                     \
+  CASTLE_IOCTL_0IN_1OUT(                                                                          \
+        state_query,                                                                              \
+        CASTLE_CTRL_STATE_QUERY,                                                                  \
+        c_state_t, state)
 
 
 
