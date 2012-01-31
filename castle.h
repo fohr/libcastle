@@ -366,9 +366,18 @@ int castle_replace         (castle_connection *conn,
                             castle_collection collection,
                             castle_key *key,
                             char *val, uint32_t val_len);
+int castle_timestamped_replace(castle_connection *conn,
+                               castle_collection collection,
+                               castle_key *key,
+                               char *val, uint32_t val_len,
+                               castle_user_timestamp_t u_ts);
 int castle_remove          (castle_connection *conn,
                             castle_collection collection,
                             castle_key *key);
+int castle_timestamped_remove(castle_connection *conn,
+                              castle_collection collection,
+                              castle_key *key,
+                              castle_user_timestamp_t u_ts);
 int castle_iter_start      (castle_connection *conn,
                             castle_collection collection,
                             castle_key *start_key,

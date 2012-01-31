@@ -15,7 +15,9 @@ CASTLE_1 {
         castle_shared_buffer_release;
         castle_get;
         castle_replace;
+        castle_timestamped_replace;
         castle_remove;
+        castle_timestamped_remove;
         castle_iter_start;
         castle_iter_next;
         castle_iter_finish;
