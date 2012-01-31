@@ -324,6 +324,38 @@ err1: castle_shared_buffer_destroy(conn, buf, key_len + val_len);
 err0: return err;
 }
 
+int castle_timestamped_replace(castle_connection *conn,
+                               c_collection_id_t collection,
+                               castle_key *key,
+                               char *val, uint32_t val_len,
+                               castle_user_timestamp_t u_ts)
+{
+    struct castle_blocking_call call;
+    castle_request_t req;
+    char *buf;
+    uint32_t key_len;
+    int err = 0;
+
+    err = make_key_buffer(conn, key, val_len, &buf, &key_len);
+    if (err) goto err0;
+
+    memcpy(buf + key_len, val, val_len);
+
+    castle_timestamped_replace_prepare(&req,
+                                       collection,
+                                       (castle_key *) buf,
+                                       key_len, buf + key_len,
+                                       val_len,
+                                       u_ts,
+                                       CASTLE_RING_FLAG_NONE);
+
+    err = castle_request_do_blocking(conn, &req, &call);
+    if (err) goto err1;
+
+err1: castle_shared_buffer_destroy(conn, buf, key_len + val_len);
+err0: return err;
+}
+
 int castle_remove(castle_connection *conn,
                   c_collection_id_t collection,
                   castle_key *key)
@@ -342,6 +374,34 @@ int castle_remove(castle_connection *conn,
                           (castle_key *) key_buf,
                           key_len,
                           CASTLE_RING_FLAG_NONE);
+
+    err = castle_request_do_blocking(conn, &req, &call);
+    if (err) goto err1;
+
+err1: castle_shared_buffer_destroy(conn, key_buf, key_len);
+err0: return err;
+}
+
+int castle_timestamped_remove(castle_connection *conn,
+                              c_collection_id_t collection,
+                              castle_key *key,
+                              castle_user_timestamp_t u_ts)
+{
+    struct castle_blocking_call call;
+    castle_request_t req;
+    char *key_buf;
+    uint32_t key_len;
+    int err = 0;
+
+    err = make_key_buffer(conn, key, 0, &key_buf, &key_len);
+    if (err) goto err0;
+
+    castle_timestamped_remove_prepare(&req,
+                                      collection,
+                                      (castle_key *) key_buf,
+                                      key_len,
+                                      u_ts,
+                                      CASTLE_RING_FLAG_NONE);
 
     err = castle_request_do_blocking(conn, &req, &call);
     if (err) goto err1;
