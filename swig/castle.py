@@ -32,6 +32,12 @@ def disable_logging():
     pycastle_log.info=dummy_info_log
 ###################################################################################################
 
+def HACK_get_current_version_from_sysfs(coll_number):
+    filename = "/sys/fs/castle-fs/collections/{0}/version".format(coll_number)
+    with open(filename, 'r') as fd:
+        for text in fd:
+            return int(text, 16)
+
 def castle_connect():
     conn = libcastle.c_connect()
     if not conn:
@@ -83,6 +89,13 @@ def castle_collection_snapshot(conn, coll):
     pycastle_log.debug("returning old_v = "+str(old_v)+", old_v.value() = "+str(old_v.value()))
     pycastle_log.info("Created snapshot of version "+str(old_v.value()))
     return old_v
+
+def castle_delete_version(conn, v):
+    pycastle_log.debug("entering with conn = "+str(conn)+" v = "+str(v))
+    ret = libcastle.castle_delete_version(conn, v)
+    if ret != 0:
+        raise Exception("returned "+str(ret))
+    pycastle_log.info("Deleted version "+str(v))
 
 def castle_shared_buffer_create(conn, size):
     pycastle_log.debug("entering with conn = "+str(conn)+" size = "+str(int(size)))
@@ -318,6 +331,16 @@ class Castle:
         #if int(old_v.value()) != self.current_version:
         #    raise Exception("old_v.value = "+str(int(old_v.value()))+",!= current version = "+str(self.current_version))
         self.current_version = int(old_v.value()) #this is technically wrong, but is less wrong than not updating it at all
+        pycastle_log.debug(str(self)+" end ")
+
+    def version_delete(self, _v):
+        pycastle_log.debug(str(self)+" start ")
+        #set up the correct types for the c_ver_t
+        if isinstance(_v, int):
+            v = _v
+        else:
+            v = int(_v.value())
+        castle_delete_version(self.conn, v)
         pycastle_log.debug(str(self)+" end ")
 
     # point get
