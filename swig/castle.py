@@ -249,7 +249,6 @@ class Castle:
         if sys.version_info < (2,6):
             pycastle_log.info("recommend using version 2.6 or later")
 
-
         self.conn = castle_connect()
 
         if opts:
@@ -271,6 +270,10 @@ class Castle:
         pycastle_log.debug(str(self)+" start ")
         if self.current_coll:
             self.collection_detach()
+        if self.key_buf:
+            castle_shared_buffer_destroy(self.conn, self.key_buf, self.key_buf_size)
+        if self.val_buf:
+            castle_shared_buffer_destroy(self.conn, self.val_buf, self.val_buf_size)
         castle_disconnect(self.conn)
         pycastle_log.debug(str(self)+" end ")
 
