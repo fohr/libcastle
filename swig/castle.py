@@ -1,4 +1,8 @@
 #!/usr/bin/python2.6
+"""
+Front-end interfaces to Acunu Castle. This is a convenience and compatibility layer mainly on top
+of SWIG generated bindings to libcastle, though some abstractions over sysfs are also provided.
+"""
 import libcastle
 import errno
 import logging, sys
@@ -7,7 +11,7 @@ import struct
 pycastle_log = logging.getLogger('test')
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('[%(levelname)s] %(funcName)s: %(message)s')
+formatter = logging.Formatter('[%(levelname)s] %(module)s: %(funcName)s: %(message)s')
 ch.setFormatter(formatter)
 pycastle_log.addHandler(ch)
 
@@ -32,63 +36,21 @@ def disable_logging():
     pycastle_log.info=dummy_info_log
 ###################################################################################################
 
-def HACK_get_current_version_from_sysfs(coll_number):
-    filename = "/sys/fs/castle-fs/collections/{0}/version".format(coll_number)
-    with open(filename, 'r') as fd:
-        for text in fd:
-            return int(text, 16)
-
+###################################################################################################
+#The following are a layer of convenience on top of SWIG generated libcastle bindings; users are
+#not expected to use these (TODO: move these to a seperate file!)
 def castle_connect():
     conn = libcastle.c_connect()
     if not conn:
-        raise Exception("no connection! is castle alive?")
+        raise CastleConnectionException("no connection! is castle alive?")
+    pycastle_log.debug("Established connection")
     pycastle_log.debug("returning conn = "+str(conn))
-    pycastle_log.info("Established connection")
     return conn
 
 def castle_disconnect(conn):
     pycastle_log.debug("entering with conn = "+str(conn))
     libcastle.castle_disconnect(conn)
-    pycastle_log.info("Disconnected")
-
-def castle_collection_create(conn):
-    pycastle_log.debug("entering with conn = "+str(conn))
-    v = libcastle.castle_version_p()
-    ret = libcastle.castle_create(conn, 0, v.cast())
-    if ret != 0:
-        raise Exception("returned "+str(ret))
-    pycastle_log.debug("returning v = "+str(v)+", v.value() = "+str(v.value()))
-    pycastle_log.info("Created collection with version number "+str(v.value()))
-    return v
-
-def castle_collection_attach(conn, v, coll_name):
-    pycastle_log.debug("entering with conn = "+str(conn)+" v.value() = "+str(v.value())+" coll_name = "+str(coll_name))
-    #make a string that's guaranteed to be null-terminated
-    nt_coll_name = str(coll_name) + "\0"
-    coll = libcastle.c_collection_id_t_p()
-    ret = libcastle.castle_collection_attach(conn, v.value(), nt_coll_name, len(nt_coll_name), coll.cast())
-    if ret != 0:
-        raise Exception("returned "+str(ret))
-    pycastle_log.debug("returning coll = "+str(coll))
-    pycastle_log.info("Attached to collection with version number "+str(v.value())+" with coll name "+str(nt_coll_name)+" with coll number "+str(coll.value()))
-    return coll
-
-def castle_collection_detach(conn, coll):
-    pycastle_log.debug("entering with conn = "+str(conn)+" coll = "+str(coll))
-    ret = libcastle.castle_collection_detach(conn, coll.value())
-    if ret != 0:
-        raise Exception("returned "+str(ret))
-    pycastle_log.info("Detached from coll number "+str(coll.value()))
-
-def castle_collection_snapshot(conn, coll):
-    pycastle_log.debug("entering with conn = "+str(conn)+" coll = "+str(coll))
-    old_v = libcastle.castle_version_p()
-    ret = libcastle.castle_collection_snapshot(conn, coll.value(), old_v.cast())
-    if ret != 0:
-        raise Exception("returned "+str(ret))
-    pycastle_log.debug("returning old_v = "+str(old_v)+", old_v.value() = "+str(old_v.value()))
-    pycastle_log.info("Created snapshot of version "+str(old_v.value()))
-    return old_v
+    pycastle_log.debug("Disconnected")
 
 def castle_delete_version(conn, v):
     pycastle_log.debug("entering with conn = "+str(conn)+" v = "+str(v))
@@ -96,6 +58,51 @@ def castle_delete_version(conn, v):
     if ret != 0:
         raise Exception("returned "+str(ret))
     pycastle_log.info("Deleted version "+str(v))
+
+def castle_collection_create(conn):
+    """ Convenience method to access something SWIG generated from libcastle. """
+    pycastle_log.debug("entering with conn = "+str(conn))
+    v = libcastle.castle_version_p()
+    ret = libcastle.castle_create(conn, 0, v.cast())
+    if ret != 0:
+        raise CastleCollectionCreateException(ret)
+    pycastle_log.debug("returning v = "+str(v)+", v.value() = "+str(v.value()))
+    pycastle_log.debug("Created collection with version number "+str(v.value()))
+    return v.value()
+
+def castle_collection_attach(conn, _v, coll_name):
+    """ Convenience method to access something SWIG generated from libcastle. """
+    v = libcastle.castle_version_p()
+    v.assign(_v)
+    pycastle_log.debug("entering with conn = "+str(conn)+" v.value() = "+str(v.value())+" coll_name = "+str(coll_name))
+    #make a string that's guaranteed to be null-terminated
+    nt_coll_name = str(coll_name) + "\0"
+    coll = libcastle.c_collection_id_t_p()
+    ret = libcastle.castle_collection_attach(conn, v.value(), nt_coll_name, len(nt_coll_name), coll.cast())
+    if ret != 0:
+        raise CastleCollectionVersionNotAttachableException(ret)
+    pycastle_log.debug("returning coll = "+str(coll))
+    pycastle_log.debug("Attached to collection with version number "+str(v.value())+" with coll name "+str(nt_coll_name)+" with coll number "+str(coll.value()))
+    return coll.value()
+
+def castle_collection_snapshot(conn, coll):
+    """ Convenience method to access something SWIG generated from libcastle. """
+    pycastle_log.debug("entering with conn = "+str(conn)+" coll = "+str(coll))
+    old_v = libcastle.castle_version_p()
+    ret = libcastle.castle_collection_snapshot(conn, coll, old_v.cast())
+    if ret != 0:
+        raise CastleCollectionSnapshotException(ret)
+    pycastle_log.debug("returning old_v = "+str(old_v)+", old_v.value() = "+str(old_v.value()))
+    pycastle_log.debug("Created snapshot of version "+str(old_v.value()))
+    return old_v.value()
+
+def castle_collection_detach(conn, coll):
+    """ Convenience method to access something SWIG generated from libcastle. """
+    pycastle_log.debug("entering with conn = "+str(conn)+" coll = "+str(coll))
+    ret = libcastle.castle_collection_detach(conn, coll)
+    if ret != 0:
+        raise CastleCollectionDetachException(ret)
+    pycastle_log.debug("Detached from coll number "+str(coll))
 
 def castle_shared_buffer_create(conn, size):
     pycastle_log.debug("entering with conn = "+str(conn)+" size = "+str(int(size)))
@@ -113,7 +120,6 @@ def castle_shared_buffer_destroy(conn, buf_p, size):
 
 def make_key(key, buf, buf_len):
     pycastle_log.debug("entering with key = "+str(key))
-
 
     key_dims = list()
     number_of_keys = None
@@ -141,9 +147,9 @@ def make_key(key, buf, buf_len):
             if ret != 0:
                 raise Exception("libcastle.build_key returned "+str(ret))
         elif isinstance(dim, int):
-            raise Exception("Handling ints in keys... not implemented yet!")
+            raise CastleKeyException("Handling ints in keys... not implemented yet!")
         else:
-            raise Exception("Can only make keys out of ints and/or strs.")
+            raise CastleKeyException("Can only make keys out of ints and/or strs.")
 
     ck = libcastle.castle_key_ptr(builder)
     ck_size = libcastle.finalize_key(builder)
@@ -206,197 +212,293 @@ def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf=None
             libcastle.c_set_prep(req_p, coll_id, castle_key, castle_key_len, val_buf, val_len, libcastle.CASTLE_RING_FLAG_NONE)
         else:
             if counter:
-                raise Exception("unexpected counter parameter of type "+str(type(counter)))
+                raise CastleValueException("unexpected counter parameter of type "+str(type(counter)))
             libcastle.c_replace_prep(req_p, coll_id, castle_key, castle_key_len, val_buf, val_len, libcastle.CASTLE_RING_FLAG_NONE)
 
     call_p = libcastle.malloc_castle_blocking_call_t()
     ret = libcastle.castle_request_do_blocking(conn, req_p, call_p)
     if ret != 0:
-        raise Exception("returned "+str(ret))
+        raise CastleReplaceException(ret)
     libcastle.free_castle_request(req_p)
     libcastle.free_castle_blocking_call_t(call_p)
     pycastle_log.debug("returning ")
+###################################################################################################
 
 
-class Castle:
+###################################################################################################
+def HACK_get_current_version_from_sysfs(coll_number):
+    """
+    At the moment after doing a snapshot the only way to know the version_id of a collection
+    is to look it up in sysfs; this sucks, but for now, it's necessary, so if you need to know
+    this information, use this method. In future, the version_id will be updated correctly
+    within a CastleCollection object whenever a snapshot is done.
+    """
+    filename = "/sys/fs/castle-fs/collections/{0}/version".format(coll_number)
+    try:
+        with open(filename, 'r') as fd:
+            for text in fd:
+                return int(text, 16)
+    except Exception, e:
+        pycastle_log.error("Failed while trying to open {0} with exception {1}:{2}".format(filename, type(e), e))
+        raise
+
+class CastleException(Exception): pass
+class CastleKeyException(CastleException): pass
+class CastleValueException(CastleException): pass
+class CastleReplaceException(CastleException): pass
+
+class CastleConnectionException(CastleException): pass
+
+class CastleConnection(object):
+    """
+    castle_connection (and castle_shared_buffer) management.
+    """
     conn = None
+    key_buffer = None
+    val_buffer = None
 
-    #todo: we need a mutex to protect this. Also, having just a single buffer doesn't seem
-    #like a great idea... maybe we can make one set of buffers per-collection? Probably
-    #okay to force ops to serialise per-collection.
-    key_buf_size = None
-    key_buf = None
-    val_buf_size = None
-    val_buf = None
+    def __init__(self):
+        """
+        Make a castle_connection.
+        """
+        pycastle_log.debug(str(self)+" start")
+        try:
+            self.conn = castle_connect()
+            if not self.conn:
+                raise CastleConnectionException("Failed to make connection; is Castle alive?")
+            pycastle_log.info(str(self)+" Established connection")
+            key_buffer = CastleSharedBuffer(size=4*1024, connection=self)
+            val_buffer = CastleSharedBuffer(size=16*1024, connection=self)
+            self.key_buffer = key_buffer
+            self.val_buffer = val_buffer
+        except Exception, e:
+            pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+            raise
+        except:
+            if self.key_buffer:
+                del self.key_buffer
+            if self.val_buffer:
+                del self.val_buffer
+            raise
+        finally:
+            pycastle_log.debug(str(self)+" stop")
 
-    #because we are using generators for range queries, it might lead to users not giving up
-    #stateful ops as often as they should; lets at least help them keep track of it.
-    current_stateful_op_count = 0
+    def buffers_destroy(self):
+        """
+        With the current implementation there is a circular dependency between CastleConnection and
+        CastleSharedBuffer objects which prevents automatic garbage collection; so to properly
+        clean up, the links must be removed manually. Call this method when the intent is to stop
+        communicating with Castle (i.e. when you expect to destroy the CastleConnection object).
 
-    #note: Current limitation is each Castle object may only have a single collection; this
-    #      limitation should be removed in the future, and what we ought to have here is a
-    #      set of collections.
-    current_coll = None
-
-    #note: current_version is not quite the current_version when using collection_snapshot
-    #      because that method (in libcastle) currently only returns the old version and we
-    #      would need to do some sysfs shenanigans to get the actual current version after
-    #      a snapshot. I've filed a trac ticket (#3580) suggesting a change in libcastle
-    #      that would make castle_collection_snapshot return the new_v in addition to old_v.
-    current_version = None
-
-    def __init__(self, opts={}):
-        if sys.version_info < (2,6):
-            pycastle_log.info("recommend using version 2.6 or later")
-
-        self.conn = castle_connect()
-
-        if opts:
-            pycastle_log.info("opts: "+str(opts))
-
-        #default shared buffer sizing
-        self.key_buf_size = 4096
-        self.val_buf_size = 4096*256
-        #overide with opts
-        if "key_buf_size" in opts:
-            self.key_buf_size = opts["key_buf_size"]
-        if "val_buf_size" in opts:
-            self.val_buf_size = opts["key_buf_size"]
-
-        self.key_buf = castle_shared_buffer_create(self.conn, self.key_buf_size)
-        self.val_buf = castle_shared_buffer_create(self.conn, self.val_buf_size)
+        TODO: get rid of this circular dependency so that gc will do the right thing and this method
+        won't be necessary!
+        """
+        my_shared_buffers = [self.key_buffer, self.val_buffer]
+        pycastle_log.debug(str(self)+" Calling buffer_destroy method for shared buffers: {0}".format(my_shared_buffers))
+        for shared_buffer in my_shared_buffers:
+            shared_buffer.buffer_destroy()
 
     def __del__(self):
-        pycastle_log.debug(str(self)+" start ")
-        if self.current_coll:
-            self.collection_detach()
-        if self.key_buf:
-            castle_shared_buffer_destroy(self.conn, self.key_buf, self.key_buf_size)
-        if self.val_buf:
-            castle_shared_buffer_destroy(self.conn, self.val_buf, self.val_buf_size)
+        """
+        Destroy a castle_connection and associated shared_buffers.
+        """
+        del self.key_buffer
+        del self.val_buffer
         castle_disconnect(self.conn)
-        pycastle_log.debug(str(self)+" end ")
+        pycastle_log.info(str(self)+" Destroyed connection")
 
-    def collection_detach(self):
-        pycastle_log.debug(str(self)+" start ")
-        if not self.current_coll:
-            raise Exception("not attached!")
-        castle_collection_detach(self.conn, self.current_coll)
-        self.current_coll = None
-        self.current_version = None
-        pycastle_log.debug(str(self)+" end ")
+class CastleSharedBuffer(object):
+    """
+    Castle/user shared_buffer management.
+    """
+    buf = None
+    size = None
+    connection = None
 
-    #we assume _v is an integer or a Swig Object of type 'castle_version_p *'
-    def collection_attach(self, _v, coll_name):
-        """
-        Attach to an existing collection at version number _v, and give the attachment name coll_name.
-        """
-        pycastle_log.debug(str(self)+" start ")
-        #drop current attachment if one exists
-        if self.current_coll:
-            self.collection_detach()
+    def __init__(self, size, connection):
+        """ Set up a shared buffer for data exchange with Castle. """
+        pycastle_log.debug(str(self)+" start")
+        try:
+            assert isinstance(connection, CastleConnection), "wtf"
+            self.buf = castle_shared_buffer_create(connection.conn, size)
+            self.size = size
+            self.connection = connection
+            pycastle_log.info("Made buffer {0} of size {1} with connection {2}".format(self.buf, self.size, self.connection.conn))
+        except Exception, e:
+            pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+            raise
+        finally:
+            pycastle_log.debug(str(self)+" stop")
 
-        #note: castle_collection_attach doesn't actually require a c_ver_t *; it dereferences it
-        #      right away, so an int should be good enough. In conventional usage, it may take
-        #      the outcome of castle_collection_create directly, but perhaps we shouldn't be
-        #      allowing that... for now, we will continue building a c_ver_t * to be passed to
-        #      castle_collection_attach. TODO: clean this up.
+    def buffer_destroy(self):
+        """ Destroy the shared buffer with Castle. """
+        try:
+            assert self.buf is not None, "wtf"
+            assert self.size is not None, "wtf"
+            assert self.connection is not None, "wtf"
+            castle_shared_buffer_destroy(self.connection.conn, self.buf, self.size)
+            pycastle_log.info(str(self)+" Destroyed buffer {0} of size {1} with connection {2}".format(self.buf, self.size, self.connection.conn))
+            self.buf = None
+            self.size = None
+            self.connection = None
+        except Exception, e:
+            pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+            raise
 
-        #set up the correct types for the c_ver_t
-        if isinstance(_v, int):
-            v = _v
+    def __del__(self):
+        pycastle_log.debug(str(self)+" start")
+        if self.buf:
+            self.destroy_buffer()
         else:
-            v = int(_v.value())
-        vp = libcastle.castle_version_p()
-        vp.assign(v)
+            pycastle_log.debug(str(self)+" Nothing to destroy")
+        pycastle_log.debug(str(self)+" stop")
 
-        #make new attachment
-        new_coll = castle_collection_attach(self.conn, vp, coll_name)
-        self.current_coll = new_coll
-        self.current_version = v
-        pycastle_log.debug(str(self)+" end ")
+class CastleCollectionException(CastleException): pass
+class CastleCollectionVersionNotAttachableException(CastleCollectionException): pass
+class CastleCollectionNameNotFoundException(CastleCollectionException): pass
+class CastleCollectionCreateException(CastleCollectionException): pass
+class CastleCollectionSnapshotException(CastleCollectionException): pass
+class CastleCollectionDetachException(CastleCollectionException): pass
+class CastleCollectionNotAttachedException(CastleCollectionException): pass
 
-    def new_collection_attach(self, coll_name):
+class Castle(CastleConnection):
+    """
+    General-purpose management interface for Castle; use this to establish a connection and shared
+    buffers, and then to instantiate CastleCollection objects which will be used to exchange data
+    with Castle.
+    """
+
+    def __init__(self):
+        """ Call CastleConnection constructor. """
+        pycastle_log.debug(str(self)+" start")
+        super(Castle, self).__init__()
+        pycastle_log.debug(str(self)+" stop")
+
+    def __del__(self):
+        """ Call CastleConnection destructor. """
+        pycastle_log.debug(str(self)+" start")
+        super(Castle, self).__del__()
+        pycastle_log.debug(str(self)+" stop")
+
+    def collection_create(self, name):
+        """ Make a CastleCollection on a new vertree, attached to the root version. """
+        try:
+            return CastleCollection(name, self)
+        except:
+            raise
+
+    def collection_find_by_name(self, name):
+        """ Make a CastleCollection on an existing attachment by name. """
+        raise Exception("NEVER BEEN TESTED!")
+        try:
+            return CastleCollection(name, self, look_for_name=True)
+        except:
+            raise
+
+    def collection_attach(self, name, version_id):
+        """ Make a CastleCollection by attaching to the given version. """
+        try:
+            return CastleCollection(name, self, version_id)
+        except:
+            raise
+
+    def version_delete(self, version_id):
+        """ Delete a version (without attaching a CastleCollection to it). """
+        try:
+            castle_delete_version(self.conn, version_id)
+            pycastle_log.info("Deleted version {0}".format(version_id))
+        except Exception, e:
+            pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+            raise
+
+    def version_clone(self, version_id):
+        """ Clone a version, returning the new (clone) version_id. """
+        raise Exception("TODO")
+
+    def checkpoint_period_get(self):
+        """ Return the current checkpoint period. """
+        raise Exception("TODO")
+
+    def checkpoint_period_set(self):
+        """ Set the checkpoint period. """
+        raise Exception("TODO")
+
+class CastleCollection(object):
+    """
+    Castle collection management.
+    """
+    coll_id = None
+    version_id = None
+    name = None
+    castle = None
+    attached = None
+
+    def __init__(self, name, castle, version_id=None, look_for_name=False):
         """
-        Create a new collection and attach to it (the equivalent of doing castle_create then
-        castle_collection_attach). Takes an attachment name as an argument (coll_name).
+        Attach to a collection; if version_id provided, attach to that version (and if this fails,
+        raise CastleCollectionVersionNotAttachableException), else, if look_for_name, connect to an
+        existing attachment by that name (if this fails, raise CastleCollectionNameNotFoundException),
+        else make a new vertree with a new root version_id and attach to the root version.
         """
-        pycastle_log.debug(str(self)+" start ")
-        new_v = castle_collection_create(self.conn)
-        self.collection_attach(new_v, coll_name)
-        pycastle_log.debug(str(self)+" end ")
+        try:
+            assert not(version_id and look_for_name), "invalid opts"
+            assert isinstance(castle, Castle), "castle is of type {0}, expecting type {1}".format(type(castle), Castle)
+            coll_id = None
+            attached_v_id = None
+            self.attached = False
 
-    def collection_snapshot(self):
-        pycastle_log.debug(str(self)+" start ")
-        old_v = castle_collection_snapshot(self.conn, self.current_coll)
+            if look_for_name:
+                #reattach to an existing attachment, by name
+                raise Exception("TODO")
+            elif version_id:
+                #attach to the specified version_id
+                coll_id = castle_collection_attach(castle.conn, int(version_id), name)
+                pycastle_log.info(str(self)+" Attached to version {0}, with collection {1} of id {2} on connection {3}".format(version_id, name, coll_id, castle.conn))
+                attached_v_id = version_id
+            else:
+                #make a new vertree and attach to the root version
+                new_v_id = castle_collection_create(castle.conn)
+                coll_id = castle_collection_attach(castle.conn, new_v_id, name)
+                pycastle_log.info(str(self)+" Created a new vertree with root version {0}, attached to collection {1} with id {2} on connection {3}".format(new_v_id, name, coll_id, castle.conn))
+                attached_v_id = new_v_id
+            self.name = name
+            self.coll_id = coll_id
+            self.version_id = attached_v_id
+            self.castle = castle
+            self.attached = True
+        except Exception, e:
+            pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+            raise
 
-        #once we are capable of updating the current_version after a snapshot, the following assertion will apply
-        #if int(old_v.value()) != self.current_version:
-        #    raise Exception("old_v.value = "+str(int(old_v.value()))+",!= current version = "+str(self.current_version))
-        self.current_version = int(old_v.value()) #this is technically wrong, but is less wrong than not updating it at all
-        pycastle_log.debug(str(self)+" end ")
+    def detach(self):
+        """ Detach the collection. """
+        try:
+            if self.attached:
+                assert self.coll_id is not None, "wtf"
+                assert self.castle is not None, "wtf"
+                assert self.name is not None, "wtf"
+                assert self.version_id is not None, "wtf"
+                castle_collection_detach(self.castle.conn, self.coll_id)
+                pycastle_log.info(str(self)+" Detached collection {2} with id {0} of version id {1}".format(self.coll_id, self.version_id, self.name))
+                self.coll_id = None
+                self.version_id = None
+                self.attached = False
+                self.castle = None
+            else:
+                pycastle_log.warn(str(self)+" Nothing to do (looks like Collection was not successfully attached?)")
+        except Exception, e:
+            pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+            raise
 
-    def version_delete(self, _v):
-        pycastle_log.debug(str(self)+" start ")
-        #set up the correct types for the c_ver_t
-        if isinstance(_v, int):
-            v = _v
+    def __del__(self):
+        """
+        By default, detach from the collection; if keepalive, then leave the attachment in place.
+        """
+        if self.attached:
+            pycastle_log.warn(str(self)+" Leaving collection {0} with coll_id {1} of version id {2} attached".format(self.name, self.coll_id, self.version_id))
         else:
-            v = int(_v.value())
-        castle_delete_version(self.conn, v)
-        pycastle_log.debug(str(self)+" end ")
+            pycastle_log.debug(str(self)+" No remaining attachment on collection named {0}".format(self.name))
 
-    # point get
-    def __getitem__(self, key):
-        pycastle_log.info("Doing point get of key "+str(key))
-
-        #prepare key
-        ck, ck_size = make_key(key, self.key_buf, self.key_buf_size)
-
-        #do it
-        val_len = castle_get_blocking(ck, ck_size, self.conn, self.current_coll, self.val_buf, self.val_buf_size)
-        if not val_len:
-            pycastle_log.info("got tombstone ")
-            return None
-
-        val = libcastle.cdata(self.val_buf, val_len)
-        return val
-
-    # replace
-    def __setitem__(self, key, val):
-        pycastle_log.info("Replacing key "+str(key)+" with val "+str(val))
-
-        #prepare key
-        ck, ck_size = make_key(key, self.key_buf, self.key_buf_size)
-
-        counter = None
-
-        #prepare value
-        if isinstance(val, CastleCounter):
-            vstr = struct.pack('q', int(val.value))
-            libcastle.memmove(self.val_buf, vstr)
-            val_len = 8
-            counter = val
-        elif isinstance(val, str):
-            vstr = str(val)
-            libcastle.memmove(self.val_buf, vstr)
-            val_len = len(vstr)
-        else:
-            raise Exception("Currently only str values supported")
-
-        #do it
-        castle_replace_blocking(ck, ck_size, self.conn, self.current_coll, self.val_buf, val_len, counter)
-
-
-    # tombstone
-    def __delitem__(self, key):
-        pycastle_log.info("Inserting tombstone on key "+str(key))
-        #prepare key
-        ck, ck_size = make_key(key, self.key_buf, self.key_buf_size)
-        #do it
-        castle_replace_blocking(ck, ck_size, self.conn, self.current_coll)
-
-    #todo: actually implement this!
     def range_query(self, start_key, end_key):
         """
         NOT YET IMPLEMENTED... but the idea is to implement range queries as python generators.
@@ -404,9 +506,10 @@ class Castle:
         semantics to drive the range query (e.g. using the next method, or putting it directly
         in a for loop).
         """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+
         print "THIS IS FAKE"
-        self.current_stateful_op_count += 1
-        pycastle_log.debug(str(self)+" start, current_stateful_op_count now "+str(self.current_stateful_op_count))
         pycastle_log.info("Doing range query from key "+str(start_key)+" to key "+str(end_key))
         try:
             i = 0
@@ -416,17 +519,103 @@ class Castle:
                 if i % 5 == 0:
                     pycastle_log.info("Getting next batch")
         except GeneratorExit:
-            self.current_stateful_op_count -= 1
             pycastle_log.info("User requested stop of range query from key "+str(start_key)+" to key "+str(end_key))
-            pycastle_log.debug(str(self)+" end, current_stateful_op_count now "+str(self.current_stateful_op_count))
 
-        self.current_stateful_op_count -= 1
-        pycastle_log.debug(str(self)+" end, current_stateful_op_count now "+str(self.current_stateful_op_count))
-        raise StopIteration
+    def __getitem__(self, key):
+        """
+        Queries (point gets and range queries). If key is a slice, returns a range_query generator object.
+        """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+        if isinstance(key, slice):
+            try:
+                start_key = key.start
+                end_key = key.stop
+                pycastle_log.debug("Making generator for range query from key {0} to key {1}".format(start_key, end_key))
+                return self.range_query(start_key, end_key)
+            except Exception, e:
+                pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+                raise
+        else:
+            try:
+                pycastle_log.debug("Doing point get of key "+str(key))
+                ck, ck_size = make_key(key, self.castle.key_buffer.buf, self.castle.key_buffer.size)
+                val_len = castle_get_blocking(ck, ck_size, self.castle.conn, self.coll_id, self.castle.val_buffer.buf, self.castle.val_buffer.size)
+                if not val_len:
+                    return None
+                val = libcastle.cdata(self.castle.val_buffer.buf, val_len)
+                return val
+            except Exception, e:
+                pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+                raise
 
+    def __setitem__(self, key, val):
+        """ Value insert. """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+        pycastle_log.debug("Replacing key "+str(key)+" with val "+str(val))
 
+        ck, ck_size = make_key(key, self.castle.key_buffer.buf, self.castle.key_buffer.size)
+        counter = None
+        if isinstance(val, CastleCounter):
+            vstr = struct.pack('q', int(val.value))
+            libcastle.memmove(self.castle.val_buffer.buf, vstr)
+            val_len = 8
+            counter = val
+        elif isinstance(val, str):
+            vstr = str(val)
+            libcastle.memmove(self.castle.val_buffer.buf, vstr)
+            val_len = len(vstr)
+        else:
+            raise CastleKeyException("Currently only str values supported")
+        castle_replace_blocking(ck, ck_size, self.castle.conn, self.coll_id, self.castle.val_buffer.buf, val_len, counter)
+
+    def __delitem__(self, key):
+        """ Tombstone insert. """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+        pycastle_log.debug("Inserting tombstone on key "+str(key))
+        ck, ck_size = make_key(key, self.castle.key_buffer.buf, self.castle.key_buffer.size)
+        #val_buf=None tells castle_replace_blocking() to insert a tombstone
+        castle_replace_blocking(ck, ck_size, self.castle.conn, self.coll_id, val_buf=None)
+
+    def snapshot(self):
+        """ Snapshot the collection's current version without removing the attachment. """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+        try:
+            old_v = castle_collection_snapshot(self.castle.conn, self.coll_id)
+            #once we are capable of updating the current_version after a snapshot, the following assertion will apply
+            #if old_v != self.version_id:
+            #    raise Exception
+            self.version_id = old_v #this is technically wrong, but is less wrong than not updating it at all
+            pycastle_log.info("Snapshotting collection {0} (coll_id={1}, version_id={2})".format(self.name, self.coll_id, self.version_id))
+        except Exception, e:
+            pycastle_log.error(str(self)+" got exception {0}:{1}".format(type(e), e))
+            raise
+
+    def delete(self):
+        """ Detach from and delete the version. """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+        raise Exception("TODO")
+
+    def vertree_delete(self):
+        """ Detach from and delete the entire vertree. """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+        raise Exception("TODO")
+
+    def vertree_compact(self):
+        """ Initiate a bigmerge on the vertree. """
+        if not self.attached:
+            raise CastleCollectionNotAttachedException()
+        raise Exception("TODO")
 
 class CastleCounter:
+    """
+    TODO: make this an abstract base class.
+    """
     value = None
     def __init__(self, val=None):
         if isinstance(val, CastleCounter):
@@ -443,5 +632,4 @@ class CastleCounterSet(CastleCounter):
 
 class CastleCounterAdd(CastleCounter):
     pass
-
 

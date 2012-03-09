@@ -6,13 +6,13 @@ import sys
 
 def main(argv):
     #castle.pycastle_log.setLevel(logging.INFO)
-    #castle.pycastle_log.setLevel(logging.DEBUG)
+    castle.pycastle_log.setLevel(logging.DEBUG)
 
     #the ctor calls castle_connect and establishes shared buffers for keys and values
-    foo = castle.Castle()
+    micasa = castle.Castle()
 
     #make a new collection then attach to it
-    foo.new_collection_attach("bar")
+    foo = micasa.collection_create("test")
 
     foo["foo", "bar", "baz"] = "Hello World"
 
@@ -29,10 +29,10 @@ def main(argv):
     assert result == "Hello World", "wtf?! result = "+str(result)
 
     #save the current version number
-    i = foo.current_version
+    i = foo.version_id
     print "We just saved the version number "+str(i)+" to a "+str(type(i))
 
-    foo.collection_snapshot()
+    foo.snapshot()
 
     #get it all back from our 3d keys
     for x, y, z in list(itertools.product(range(10,13), range(0,3), range(0,3))):
@@ -51,38 +51,43 @@ def main(argv):
     assert not result, "wtf?! result = "+str(result)
 
     ##detach
-    foo.collection_detach()
+    foo.detach()
 
     #attach to version i
-    foo.collection_attach(i, "baz")
-    result = foo["foo", "bar", "baz"]
+    baz = micasa.collection_attach("baz", i)
+
+
+    result = baz["foo", "bar", "baz"]
     print result
     assert result == "Hello World", "wtf?!"
 
     #this throws an exception because we can't handle non-string keys yet
     try:
-        print foo["zero", 1]
+        print baz["zero", 1]
     except Exception, e:
         print "EXCEPTION! "+str(e)
     #this throws an exception because we can't handle non-string values yet
     try:
-        foo["1"] = 31
+        baz["1"] = 31
     except Exception, e:
         print "EXCEPTION! "+str(e)
 
     #dummy example of range query, just to illustrate the idea
-    foo_rq = foo.range_query((str(0),str(0),str(0)), (str(2),str(2),str(2)))
-    print "Just made foo_rq, which is a "+str(type(foo_rq))
-    print "Current stateful op count after we called range_query method : "+ str(foo.current_stateful_op_count)
-    print "next yielded "+str(foo_rq.next())
-    print "Current stateful op count after we got first element : "+ str(foo.current_stateful_op_count)
-    print "next yielded "+str(foo_rq.next())
-    for item in foo_rq:
+    start_key = (str(0),str(0),str(0))
+    stop_key = (str(2),str(2),str(2))
+    baz_rq = baz[start_key:stop_key]
+    print "Just made baz_rq, which is a "+str(type(baz_rq))
+    print "next yielded "+str(baz_rq.next())
+    print "next yielded "+str(baz_rq.next())
+    for item in baz_rq:
         print "Got "+str(item)
         if item == 7:
             print "We found the item we were looking for; stopping range query"
-            foo_rq.close()
+            baz_rq.close()
 
+    print "\nExiting test...\n"
+    micasa.buffers_destroy()
+    castle.ch.flush()
     print "Test complete."
     sys.exit(0)
 

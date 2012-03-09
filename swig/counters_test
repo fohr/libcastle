@@ -7,8 +7,8 @@ def main(argv):
     #castle.pycastle_log.setLevel(logging.INFO)
     #castle.pycastle_log.setLevel(logging.DEBUG)
 
-    foo = castle.Castle()
-    foo.new_collection_attach("bar")
+    micasa = castle.Castle()
+    foo = micasa.collection_create("counters")
 
     #init the counter
     comp = 0;

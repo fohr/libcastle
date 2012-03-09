@@ -33,8 +33,8 @@ def insert_perf_test():
     max_key = 999999
     dims = 2
 
-    foo = castle.Castle()
-    foo.new_collection_attach("bar")
+    micasa = castle.Castle()
+    foo = micasa.collection_create("perf")
 
     print "Created new collection, starting inserts now"
     inserts = 0
