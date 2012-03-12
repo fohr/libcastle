@@ -7,6 +7,8 @@ import libcastle
 import errno
 import logging, sys
 import struct
+import abc
+import re
 
 pycastle_log = logging.getLogger('test')
 ch = logging.StreamHandler()
@@ -29,7 +31,6 @@ def disable_logging():
     testing and such (impact of the logging module is non-trivial, given how frequently it is called
     by this module). There is no supported way to re-enable logging after disabling it; the only
     way is to reload the castle.py module.
-    module.
     """
     print "Permanently disabled logging; to re-enable logging, module must be reloaded"
     pycastle_log.debug=dummy_debug_log
@@ -226,6 +227,7 @@ def castle_replace_blocking(castle_key, castle_key_len, conn, coll, val_buf=None
 
 
 ###################################################################################################
+# These are the means by which users are primarily expected to interact with Castle
 def HACK_get_current_version_from_sysfs(coll_number):
     """
     At the moment after doing a snapshot the only way to know the version_id of a collection
@@ -250,17 +252,13 @@ class CastleReplaceException(CastleException): pass
 class CastleConnectionException(CastleException): pass
 
 class CastleConnection(object):
-    """
-    castle_connection (and castle_shared_buffer) management.
-    """
+    """ castle_connection (and castle_shared_buffer) management. """
     conn = None
     key_buffer = None
     val_buffer = None
 
     def __init__(self):
-        """
-        Make a castle_connection.
-        """
+        """ Make a castle_connection. """
         pycastle_log.debug(str(self)+" start")
         try:
             self.conn = castle_connect()
@@ -299,18 +297,16 @@ class CastleConnection(object):
             shared_buffer.buffer_destroy()
 
     def __del__(self):
-        """
-        Destroy a castle_connection and associated shared_buffers.
-        """
-        del self.key_buffer
-        del self.val_buffer
+        """ Destroy a castle_connection and associated shared_buffers. """
+        if self.key_buffer:
+            del self.key_buffer
+        if self.val_buffer:
+            del self.val_buffer
         castle_disconnect(self.conn)
         pycastle_log.info(str(self)+" Destroyed connection")
 
 class CastleSharedBuffer(object):
-    """
-    Castle/user shared_buffer management.
-    """
+    """ Castle/user shared_buffer management. """
     buf = None
     size = None
     connection = None
@@ -424,9 +420,7 @@ class Castle(CastleConnection):
         raise Exception("TODO")
 
 class CastleCollection(object):
-    """
-    Castle collection management.
-    """
+    """ Castle collection management. """
     coll_id = None
     version_id = None
     name = None
@@ -557,7 +551,7 @@ class CastleCollection(object):
 
         ck, ck_size = make_key(key, self.castle.key_buffer.buf, self.castle.key_buffer.size)
         counter = None
-        if isinstance(val, CastleCounter):
+        if isinstance(val, _CastleCounter):
             vstr = struct.pack('q', int(val.value))
             libcastle.memmove(self.castle.val_buffer.buf, vstr)
             val_len = 8
@@ -612,24 +606,125 @@ class CastleCollection(object):
             raise CastleCollectionNotAttachedException()
         raise Exception("TODO")
 
-class CastleCounter:
+class CastleInterface(Castle):
     """
-    TODO: make this an abstract base class.
+    Encapculates the Castle object (which provides CastleCollection object, CastleSharedBuffer
+    objects, and a factory to provide CastleCollection objects) and adds a Sysfs interface.
+
+    TODO TODO TODO TODO TODO TODO
     """
+    def __init__():
+        raise Exception("TODO")
+
+class CastleCounterException(CastleException): pass
+class _CastleCounter(object):
+    __metaclass__ = abc.ABCMeta
     value = None
-    def __init__(self, val=None):
-        if isinstance(val, CastleCounter):
+
+    @abc.abstractmethod
+    def __init__(self, val):
+        if isinstance(val, _CastleCounter):
             self.value=val.value
         elif isinstance(val, int):
             self.value=val
         elif isinstance(val, str):
             self.value=int(struct.unpack('q', val)[0])
         else:
-            raise Exception("Dunno what to do with val of type "+str(type(val)))
+            raise CastleCounterException("Dunno what to do with val of type "+str(type(val)))
 
-class CastleCounterSet(CastleCounter):
-    pass
+class CastleCounterSet(_CastleCounter):
+    """ A Castle counter SET object. """
+    def __init__(self, val):
+        super(CastleCounterSet, self).__init__(val)
 
-class CastleCounterAdd(CastleCounter):
-    pass
+class CastleCounterAdd(_CastleCounter):
+    """ A Castle counter ADD object. """
+    def __init__(self, val):
+        super(CastleCounterAdd, self).__init__(val)
+
+def castle_counter_to_int(castle_counter_val):
+    """ A convenience function to unpack a counter value returned by Castle. """
+    return int(struct.unpack('q', castle_counter_val)[0])
+
+###################################################################################################
+
+
+###################################################################################################
+# Work-in-progress: some stuff to help with sysfs...
+class CastleSysfsException(CastleException): pass
+class CastleSysfsSyntaxException(CastleSysfsException): pass
+
+class CastleSysfsComponentTreeState:
+    """
+    State of a component tree (this is based on
+    /sys/fs/castle-fs/vertrees/(vertree_id)/component_trees).
+    """
+    entries = None
+    _raw_sysfs_string = None
+
+    def __init__(self, sysfs_string):
+        """
+        The sysfs_string will be parsed (splitted) and results stored (right now just the
+        number of entries in entries.
+        """
+        self.entries = None
+        self._raw_sysfs_string = None
+        if sysfs_string:
+            self._raw_sysfs_string = sysfs_string
+            self._parse_sysfs()
+
+    def _parse_sysfs(self, sysfs_string = None):
+        if sysfs_string:
+            self._raw_sysfs_string = sysfs_string
+        ct_attributes = self._raw_sysfs_string.split()
+        self.entries = int(ct_attributes[0])
+
+class CastleSysfsPerVertreeComponentTreeState:
+    """
+    Sysfs-derived list of all component trees in a given vertree (this is based on
+    /sys/fs/castle-fs/vertrees/(vertree_id)/component_trees).
+    """
+    levels = None
+
+    _raw_sysfs_data = None
+    _filepath = None
+
+    def __init__(self, vertree_id = None, filepath = None):
+        """
+        Can init with vertree_id or filepath, MUST provide at least one, if
+        both provided, will ignore vertree_id.
+        """
+        if not filepath:
+            if not vertree_id:
+                raise CastleSysfsSyntaxException("Must init with either vertree_id or a filepath")
+            assert isinstance(vertree_id, int), "vertree_id needs to be an int"
+            vertree_id = hex(vertree_id)[2:] #we convert it to non-prefixed hex
+            filepath = "/sys/fs/castle-fs/vertrees/{0}/component_trees".format(vertree_id)
+        self._filepath = filepath
+        pycastle_log.info("Generating sysfs_component_trees data from {0}".format(filepath))
+        self.refresh()
+
+    def refresh(self):
+        """ Update state by reading sysfs again. """
+        f = open(self._filepath, 'r')
+        self._raw_sysfs_data = f.read()
+        f.close()
+        self._process_raw_data()
+
+    def _process_raw_data(self):
+        """ Process the text block (called automatically by refresh(). """
+        sysfs_per_line = self._raw_sysfs_data.splitlines()
+        del sysfs_per_line[0] #throw away the first line, it's just the counts, we don't care...
+
+        self.levels = dict()
+
+        for level in range(0, len(sysfs_per_line)):
+            line = sysfs_per_line[level]
+            cts = list()
+            cts_strings = re.findall('\[(.+?)\]', line)
+            for ct_string in cts_strings:
+                new_ct = CastleSysfsComponentTreeState(ct_string)
+                new_ct.raw_sysfs_string = ct_string
+                cts.append(new_ct)
+            self.levels[level]=cts
 

@@ -4,24 +4,32 @@ import sys
 import logging
 
 def main(argv):
-    #castle.pycastle_log.setLevel(logging.INFO)
     #castle.pycastle_log.setLevel(logging.DEBUG)
+    castle.pycastle_log.setLevel(logging.INFO)
 
     micasa = castle.Castle()
     foo = micasa.collection_create("counters")
 
-    #init the counter
-    comp = 0;
-    foo["bar"]=castle.CastleCounterAdd(0)
-    for i in range(1, 6):
-        c = pow(2, i)
-        print "inserting ADD "+str(c)
-        comp+=c
-        foo["bar"]=castle.CastleCounterAdd(c)
+    try:
+        #init the counter
+        comp = 0;
+        foo["bar"]=castle.CastleCounterAdd(0)
+        for i in range(1, 6):
+            c = pow(2, i)
+            print "inserting ADD "+str(c)
+            comp+=c
+            foo["bar"]=castle.CastleCounterAdd(c)
 
-    retval = castle.CastleCounter(foo["bar"]).value
-    print "got "+str(retval)+", expecting "+str(comp)
-    assert retval == comp, "wtf??"
+        retval = castle.castle_counter_to_int(foo["bar"])
+        print "got "+str(retval)+", expecting "+str(comp)
+        assert retval == comp, "wtf??"
+    except Exception, e:
+        print "Got exception {0}:{1}".format(type(e), e)
+    finally:
+        castle.pycastle_log.setLevel(logging.INFO)
+        foo.detach()
+        del foo
+        micasa.buffers_destroy()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
