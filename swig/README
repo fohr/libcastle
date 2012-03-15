@@ -1,7 +1,0 @@
-BUILD
------
-After doing make install of libcastle.hg, you must manually run 'build.sh' in the libcastle.hg/swig directory to generate the Python bindings. Only tested with SWIG 2.0.4. 
-
-USE
----
-From your Python script (or interpreter), import castle, or if you want more direct libcastle-ey interfaces, import libcastle. Example user code in the file named 'test'.
