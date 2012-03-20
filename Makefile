@@ -14,8 +14,8 @@ all: $(SONAME) $(CASTLE_IOCTLS_EXENAME)
 $(SONAME): castle_front.o castle_ioctl.o castle_convenience.o castle_print.o castle_utils.o
 	gcc -pthread -shared -Wl,-Bsymbolic -Wl,-soname,$(SONAME) -Wl,--warn-common -Wl,--fatal-warnings -Wl,--version-script=versions -o $@ $^ $(CFLAGS)
 
-$(CASTLE_IOCTLS_EXENAME): castle_ioctl.c *.h
-	gcc -lcastle -o $@ castle_ioctl.c $(CFLAGS)
+$(CASTLE_IOCTLS_EXENAME): castle_front.o castle_ioctl.o castle_convenience.o castle_print.o castle_utils.o
+	gcc -pthread -o $@ $^ $(CFLAGS)
 
 install: $(SONAME) $(CASTLE_IOCTLS_EXENAME)
 	mkdir -p $(LIB_DESTDIR)
