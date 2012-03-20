@@ -276,3 +276,116 @@ int castle_##_id (struct castle_front_connection *conn,                         
 
 CASTLE_IOCTLS
 PRIVATE_CASTLE_IOCTLS
+
+/*************************************************************************************************/
+/* A thin wrapper executable to issue Castle ioctls. */
+
+#define CASTLE_IOCTLS_EXE_DEBUG
+#define STR_TO_CTYPE_version(_v)   atol(_v)
+#define STR_TO_CTYPE_string(_v)    (_v)
+#define STR_TO_CTYPE_size(_v)      atol(_v)
+
+//#define RET_STR_FMT             ("%lld")
+//#define RET_STR_FMT             ("0x%x")
+#define RET_STR_FMT             ("0x%x\n")
+
+static int parse_args(int argc, char *argv[], char **cmd, char **str_args[])
+{
+    int i;
+    *cmd = argv[1]; //TODO append a castle_ prefix so the user does not have to specify it?
+    for (i=2; i<argc; i++)
+        (*str_args)[i-2]=argv[i];
+    if (argc>2)
+        return argc-2;
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    int i;
+    int arg_count;
+    char *cmd = NULL;
+    char **str_args = NULL;
+    castle_connection *conn;
+    int err = 0;
+
+    if ((err = castle_connect(&conn)))
+    {
+        fprintf(stderr, "castle_connect failed with error code %d (is Castle running?)\n", err);
+        return err; /* After this there can be no returns until the out label! */
+    }
+
+    if (argc < 2)
+    {
+        fprintf(stderr, "Insufficient number of arguments (%d).\n", argc);
+        err = -EINVAL;
+        goto out;
+    }
+    if (argc > 2)
+    {
+        str_args = malloc(sizeof(char *) * (argc-2));
+        if (!str_args)
+        {
+            fprintf(stderr, "Failed to malloc for argument parseing.\n");
+            err = -ENOMEM;
+            goto out;
+        }
+    }
+
+    arg_count = parse_args(argc, argv, &cmd, &str_args);
+
+#ifdef CASTLE_IOCTLS_EXE_DEBUG
+    fprintf(stderr, "argc: %d\n", argc);
+    for(i=0; i<argc; i++)
+        fprintf(stderr, "argv[%d]=%s\n", i, argv[i]);
+    fprintf(stderr, "cmd: %s, arg_count: %d\n", cmd, arg_count);
+    for(i=0; i<arg_count; i++)
+        fprintf(stderr, "arg %d: %s\n", i, str_args[i]);
+    fprintf(stderr, "Preparing to issue ioctl...\n");
+#endif
+
+
+    // TODO: FUNKY MACRO MAGIC HERE? Mileage may vary...
+    if (0) {}
+    else if (!strcmp(cmd, "collection_attach"))
+    {
+        int _i = 0;
+        int req_arg_count = 2;
+        C_TYPE_version arg1;
+        C_TYPE_string arg2;
+        //C_TYPE_size arg3 = STR_TO_CTYPE_size(str_args[_i++]);
+        C_TYPE_collection_id ret;
+
+
+        if (arg_count != req_arg_count)
+        {
+            fprintf(stderr, "Command %s requires %d arguments (got %d).\n", cmd, req_arg_count, arg_count);
+            err = -EINVAL;
+            goto out;
+        }
+
+        arg1 = STR_TO_CTYPE_version(str_args[_i++]);
+        arg2 = STR_TO_CTYPE_string(str_args[_i++]);
+        //C_TYPE_size arg3 = STR_TO_CTYPE_size(str_args[_i++]);
+
+#ifdef CASTLE_IOCTLS_EXE_DEBUG
+        fprintf(stderr, "running %s\n", cmd);
+#endif
+
+        if ((err = castle_collection_attach(conn, arg1, arg2, strlen(arg2)+1, &ret)))
+        {
+            fprintf(stderr, "Command %s failed with error code %d.\n", cmd, err);
+            goto out;
+        }
+        printf(RET_STR_FMT, ret);
+        goto out;
+    }
+
+    fprintf(stderr, "Command %s not recognized.\n", cmd);
+    err = -EINVAL;
+out:
+    castle_disconnect(conn);
+    return err;
+}
+
+
