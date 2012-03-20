@@ -46,6 +46,7 @@ rm -rf %{buildroot}
 /usr/lib64/libcastle.so.1
 
 %files devel
+/usr/sbin/castle_ioctl_cmd
 /usr/lib64/libcastle.so
 /usr/include/castle/*
 
