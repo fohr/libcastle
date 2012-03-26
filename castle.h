@@ -540,10 +540,6 @@ int castle_get_chunk       (castle_connection *conn,
         destroy_vertree,                                                                          \
         CASTLE_CTRL_DESTROY_VERTREE,                                                              \
         da_id_t, vertree_id)                                                                      \
-  CASTLE_IOCTL_1IN_0OUT(                                                                          \
-        vertree_compact,                                                                          \
-        CASTLE_CTRL_VERTREE_COMPACT,                                                              \
-        da_id_t, vertree_id)                                                                      \
   CASTLE_IOCTL_0IN_1OUT(                                                                          \
         merge_thread_create,                                                                      \
         CASTLE_CTRL_MERGE_THREAD_CREATE,                                                          \
