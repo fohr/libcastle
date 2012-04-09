@@ -61,7 +61,8 @@ struct castle_blocking_call
     int                      err;
     uint64_t                 length;
     castle_token             token;
-    castle_user_timestamp_t  user_timestamp;   /** See comments in castle_response_t. */
+    castle_user_timestamp_t  user_timestamp;   /**< See comments in castle_response_t. */
+    castle_resp_flags_t      flags;            /**< See comments in castle_response_t. */
 };
 
 int castle_shared_buffer_create   (castle_connection *conn,

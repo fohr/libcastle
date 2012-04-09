@@ -701,6 +701,7 @@ static void castle_blocking_callback(castle_connection *conn __attribute__((unus
     call->token = resp->token;
     call->length = resp->length;
     call->user_timestamp = resp->user_timestamp;
+    call->flags = resp->flags;
 
     pthread_mutex_lock(&blocking_call_mutex);
     call->completed = 1;
