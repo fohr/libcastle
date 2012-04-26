@@ -253,6 +253,69 @@ ONLY_INLINE void castle_iter_finish_prepare(castle_request *req,
   req->iter_finish.token = token;
 }
 
+/* CASTLE_BACK_STREAM_IN_START */
+extern void castle_stream_in_start_prepare(castle_request *req,
+                                           castle_collection collection,
+                                           uint64_t entries_count,
+                                           uint32_t medium_object_chunks,
+                                           uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_stream_in_start_prepare(castle_request *req,
+                                                castle_collection collection,
+                                                uint64_t entries_count,
+                                                uint32_t medium_object_chunks,
+                                                uint8_t flags)
+{
+  req->tag = CASTLE_RING_STREAM_IN_START;
+  req->flags = flags;
+  req->stream_in_start.collection_id = collection;
+  req->stream_in_start.entries_count = entries_count;
+  req->stream_in_start.medium_object_chunks = medium_object_chunks;
+}
+
+/* CASTLE_BACK_ITER_NEXT */
+extern void castle_stream_in_next_prepare(castle_request *req,
+                                          castle_token token,
+                                          char *buffer,
+                                          uint32_t buffer_len,
+                                          uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_stream_in_next_prepare(castle_request *req,
+                                          castle_token token,
+                                          char *buffer,
+                                          uint32_t buffer_len,
+                                          uint8_t flags)
+{
+  req->tag = CASTLE_RING_STREAM_IN_NEXT;
+  req->flags = flags;
+  req->stream_in_next.token = token;
+  req->stream_in_next.buffer_ptr = buffer;
+  req->stream_in_next.buffer_len = buffer_len;
+}
+
+/* CASTLE_BACK_STREAM_IN_FINISH */
+extern void castle_stream_in_finish_prepare(castle_request *req,
+                                            castle_token token,
+                                            uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_stream_in_finish_prepare(castle_request *req,
+                                                 castle_token token,
+                                                 uint8_t flags) {
+  req->tag = CASTLE_RING_STREAM_IN_FINISH;
+  req->flags = flags;
+  req->stream_in_finish.token = token;
+  req->stream_in_finish.abort = 0;
+}
+
+extern void castle_stream_in_abort_prepare(castle_request *req,
+                                           castle_token token,
+                                           uint8_t flags) __attribute__((always_inline));
+ONLY_INLINE void castle_stream_in_abort_prepare(castle_request *req,
+                                                castle_token token,
+                                                uint8_t flags) {
+  req->tag = CASTLE_RING_STREAM_IN_FINISH;
+  req->flags = flags;
+  req->stream_in_finish.token = token;
+  req->stream_in_finish.abort = 1;
+}
+
 extern void castle_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len, uint8_t flags) __attribute__((always_inline));
 ONLY_INLINE void castle_big_put_prepare(castle_request *req, castle_collection collection, castle_key *key, uint32_t key_len, uint64_t value_len, uint8_t flags) {
   req->tag = CASTLE_RING_BIG_PUT;
