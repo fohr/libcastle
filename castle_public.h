@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#define CASTLE_PROTOCOL_VERSION 38 /* last updated by TR */
+#define CASTLE_PROTOCOL_VERSION 39 /* last updated by BM */
 
 #ifdef SWIG
 #define PACKED               //override gcc intrinsics for SWIG
@@ -957,6 +957,8 @@ enum {
     CASTLE_RING_FLAG_ITER_GET_OOL     = (1 << 4),        /**< Return out-of-line values inline.              */
     CASTLE_RING_FLAG_RET_TIMESTAMP    = (1 << 5),        /**< Return value timestamps.                       */
     CASTLE_RING_FLAG_RET_TOMBSTONE    = (1 << 6),        /**< Return tombstones (instead of ENOENT).         */
+    CASTLE_RING_FLAG_INC_BACKUP       = (1 << 7),        /**< Iterator for Incremental Backup.               */
+    /* Note: Flags are stored in 8-bit fields. Don't overflow. */
 };
 
 typedef struct castle_response {
@@ -1084,6 +1086,7 @@ struct castle_fs_superblock_public {
     CASTLE_ERROR_CODE(111, C_ERR_MERGE_ERROR, "Internal error in merges.")                      \
     CASTLE_ERROR_CODE(112, C_ERR_MERGE_INVAL_ID, "Invalid merge ID.")                           \
     CASTLE_ERROR_CODE(113, C_ERR_MERGE_RUNNING, "Merge is already running.")                    \
+    CASTLE_ERROR_CODE(114, C_ERR_MERGE_BACKUP_BARRIER, "Trying to merge beyond back-up barrier.")\
                                                                                                 \
     CASTLE_ERROR_CODE(201, C_ERR_INVAL_DA, "Invalid version tree.")                             \
                                                                                                 \
